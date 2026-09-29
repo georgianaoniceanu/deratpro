@@ -2,7 +2,7 @@ import { contactInfo } from "@/data/date"
 
 export default function Hero() {
     return (
-        <section id="hero" className="bg-forest text-white min-h-[85svh] flex items-center">
+        <section id="hero" className="bg-forest text-white min-h-[calc(100svh-89px)] sm:min-h-[calc(100svh-97px)] flex items-center">
             <div className="w-full max-w-7xl mx-auto px-6 lg:px-12">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] mb-6 text-balance">
                     Cu DeratPro, spațiile tale rămân <span className="font-serif italic text-mustard">curate</span>

@@ -32,7 +32,7 @@ export default function Footer() {
     return (
         <footer className="bg-forest text-white">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-x-20 sm:gap-y-16 lg:gap-12">
                     <div>
                         <a href="#" className="text-3xl font-extrabold tracking-tight">
                             Derat<span className="text-mustard">Pro</span>
