@@ -36,9 +36,11 @@ npm run lint    # verificare ESLint
 
 Formularul de contact are validare scrisă de mână, cu `useState`. Pentru trei câmpuri nu merita o librărie.
 
-## Design: Google Stitch
+## Design: de la Dribbble la Google Stitch
 
-Designul a fost generat cu **[Google Stitch](https://stitch.withgoogle.com)**, pornind de la un design de inspirație de pe Dribbble: [PureClean – Professional Cleaning Service Landing Page](https://dribbble.com/shots/27012712-Professional-Cleaning-Service-Landing-Page) (Adrian Gancarek). Am atașat o captură a lui la prompt.
+**1. Inspirația.** Am căutat pe Dribbble landing page-uri pentru firme de curățenie și am ales [PureClean – Professional Cleaning Service Landing Page](https://dribbble.com/shots/27012712-Professional-Cleaning-Service-Landing-Page) (Adrian Gancarek). Mi-au plăcut hero-ul închis la culoare, restul paginii în tonuri calde, deschise, și cuvintele accentuate în italic. E un stil curat, care inspiră încredere, adică exact ce trebuie să transmită o firmă de dezinsecție.
+
+**2. Tool-ul de design AI: [Google Stitch](https://stitch.withgoogle.com).** Am scris promptul pentru DeratPro și am atașat o captură cu designul PureClean, ca Stitch să aibă o direcție vizuală clară.
 
 Promptul inițial:
 
@@ -54,31 +56,47 @@ sectiuni:
 footer simplu. textele in romana. vreau si varianta de mobil
 ```
 
-Prima variantă a ieșit prea încărcată: badge-uri deasupra secțiunilor, prețuri și liste pe carduri, un font monospace și mai multe secțiuni decât cele cerute. Așa că am refăcut promptul de la zero, mai strict:
+**3. Iterația.** Prima variantă avea o direcție bună, dar mai multe probleme: o cutie „interactive 3D viewport” în hero, titluri scrise Cu Fiecare Cuvânt Cu Majusculă, galben greu de citit pe fundal deschis, o secțiune de servicii slabă și un navbar stricat pe tabletă și telefon. Al doilea prompt:
 
 ```
-vreau un landing page pt DeratPro, o firma de deratizare, dezinsectie si dezinfectie pt case si firme. sa inspire incredere si sa aduca cereri de oferta
+arata bine, mai am cateva modificari:
 
-stilul inspirat din designul atasat (PureClean): hero inchis la culoare, restul paginii deschis, crem/alb cald. culori verde oliv inchis, crem si galben mustar ca accent pt butoane. doar 2 fonturi: unul sans modern pt text si un serif italic doar pt 1-2 cuvinte accentuate din titluri. fara font monospace. titluri mari, text lizibil, descrieri scurte, mult spatiu liber, colturi usor rotunjite. fara poze cu gandaci sau soareci, fara termenul DDD, fara badge-uri si etichete in chenar deasupra sectiunilor
+- in hero scoate cutia cu interactive 3d viewport. lasa doar spatiu liber pe fundal, fara chenar, ca animatia sa se imbine cu fundalul. pe mobil spatiul pt animatie sa fie mai mic sau in spatele textului
+- titlurile scrise normal, doar prima litera mare (Spatii curate si fara daunatori, nu Spatii Curate Si Fara Daunatori)
+- cuvantul in italic galben pastreaza-l doar in hero si la contact. in restul titlurilor fara italic
+- pe fundal deschis cuvintele accentuate sa fie verde inchis, nu galben, ca sa se citeasca bine
+- la de ce DeratPro avantajele fara carduri, doar iconita, titlu si text, ca sa arate diferit de servicii
+- la cum functioneaza toti cei 3 pasi la fel si legati cu o linie intre ei
+- la contact scoate adresa si textul mic cu autorizatiile
+- titlurile sa nu se rupa urat pe 2 randuri
 
-doar 5 sectiuni:
-1. hero pe fundal verde oliv foarte inchis. navbar simplu sus cu logo, linkuri spre sectiuni si buton "Cere o oferta". pe desktop text in stanga si in dreapta un spatiu gol pt o animatie 3d pe care o fac eu (nu pune nimic acolo). titlu scurt cu un cuvant in italic, un rand de text si butonul principal
-2. servicii - 3 carduri pe desktop unul langa altul: deratizare, dezinsectie, dezinfectie. fiecare doar cu iconita, titlu si 2 randuri descriere. fara preturi, liste sau butoane
-3. de ce DeratPro - 4 avantaje cu iconite: interventie rapida, substante avizate, personal autorizat, garantie. sub ele un singur rand cu 3 cifre
-4. cum functioneaza - 3 pasi numerotati, pe desktop pe orizontala: ne suni, evaluare, interventie
-5. contact - formular doar cu nume, telefon si mesaj, iar langa el telefon, email si program
+sectiunea de servicii nu arata bine, vreau sa o refac:
+- titlu mai scurt, pe un singur rand, de ex "Serviciile noastre", cu un subtitlu scurt dedesubt
+- titlul si subtitlul aliniate la stanga, la fel ca textul din carduri, nu centrate
+- in carduri iconita mai mare, titlul mai mare si textul descrierii mai mare si mai inchis la culoare
+- descrierile de aceeasi lungime, maxim 2 randuri, ca toate cardurile sa arate egal
+- mai putin spatiu intre titlul sectiunii si carduri
 
-footer simplu. textele in romana
-
-vreau varianta de desktop care sa foloseasca toata latimea ecranului si varianta de mobil unde totul e pe o coloana
+navbarul nu merge pe tableta si telefon: pe tableta linkurile se rup pe 2 randuri si se suprapun, iar pe telefon dispar complet. vreau:
+- sub 1024px linkurile ascunse si in locul lor o iconita de meniu hamburger
+- la apasare un meniu care se deschide de sus sau pe tot ecranul, cu linkurile mari, butonul Cere o oferta si telefonul
+- in navbar pe mobil raman doar logo-ul, butonul Cere o oferta si iconita de meniu
+- arata-mi si cum arata meniul deschis pe telefon
 ```
 
-Apoi am mai trimis câteva prompturi scurte de corectură: navbar-ul pe tabletă, butonul de ofertă, textele prea mici și secțiunea hero. Designul din Stitch a fost punctul de plecare. În implementare am schimbat mai multe lucruri, de exemplu:
-- am adăugat fotografia din hero și animația;
-- am adăugat tema dark;
-- am mutat butonul de ofertă într-unul plutitor;
-- am adăugat pe fiecare card de serviciu ce tratăm și unde intervenim;
-- am adăugat certificările și zona deservită.
+**4. Din design în site funcțional.** Codul exportat din Stitch a fost doar referință, nu l-am copiat. Am luat din el paleta, fonturile, ierarhia și spațierile, apoi am construit pagina de la zero:
+- câte o componentă pentru fiecare secțiune, cu textele separate în `data/date.ts`;
+- layout responsive, verificat pe telefon, tabletă și desktop, plus meniu hamburger sub 1024px;
+- formular cu validare reală și mesaj de confirmare;
+- accesibilitate (contrast, etichete, `aria-*`, navigare din tastatură) și SEO (metadate, `lang="ro"`).
+
+Am schimbat și adăugat față de design:
+- fotografia din hero și animația Three.js;
+- tema dark;
+- butonul de ofertă mutat într-unul plutitor, care apare doar când hero-ul și formularul nu sunt pe ecran;
+- pe fiecare card de serviciu, ce tratăm și unde intervenim;
+- certificările, zona deservită și cifrele care „numără” când apar pe ecran;
+- apariția lină a secțiunilor la scroll.
 
 Paleta finală: verde închis `#0F2318`, crem `#F2ECDF` și muștar `#E5A93C`. Fonturile sunt **Plus Jakarta Sans** pentru text și **Playfair Display** italic pentru cuvintele accentuate.
 
@@ -118,7 +136,18 @@ Ideea: firma curăță, deci poza din hero **se curăță** sub ochii vizitatoru
 - **Pe calculator:** poza apare murdară, cu praf, pete și o tentă cenușie. Se curăță pe unde treci cu mouse-ul, cu scântei mici pe urma cursorului. Ce ștergi rămâne curat până la refresh.
 - **Pe telefon și tabletă:** hero-ul pornește verde închis. Din colțul din stânga-sus intră lancea unui **nebulizator** (construit din forme simple în Three.js, fără model descărcat). Lancea pulverizează ceață pe diagonală, iar unde se așază ceața apare poza. Animația rulează o singură dată, cam 6–7 secunde.
 
-Cum funcționează tehnic:
+### Cum am ajuns aici
+
+1. **Bule de săpun.** Prima animație erau bule de săpun irizate care urcau lent și se spărgeau la hover sau la atingere. Am pus-o apoi pe toată pagina, în fundal, în spatele site-ului. Am renunțat la ea din trei motive:
+   - era un efect decorativ, fără legătură cu deratizarea sau dezinsecția;
+   - animația Three.js nu mai era în hero, cum cere tema;
+   - concura cu efectul de ștergere. Am vrut o singură animație „wow”, care să spună povestea firmei, cu restul paginii în liniște în jurul ei.
+2. **Ștergerea murdăriei cu mouse-ul sau degetul.** Pe calculator a mers bine de la început. Pe telefon, în schimb, avea două probleme: se bloca pe telefoanele mai slabe, iar ștersul cu degetul se confunda cu scroll-ul paginii. Am optimizat-o mult (murdăria calculată o singură dată, masca pe placa video, desenare doar la nevoie), dar interacțiunea cu degetul rămânea incomodă.
+3. **Ștergeri automate pe telefon.** Am încercat pe telefon o ștergere automată: întâi un traseu în zigzag (arăta ca un șarpe și nu era intuitiv), apoi o bandă lată care curăța toată poza, apoi un trafalet 3D pe diagonală. Trafaletul arăta bine, dar ducea cu gândul la zugrăvit, nu la ce face firma.
+4. **Nebulizatorul (varianta finală, pe telefon).** Nebulizarea e chiar tehnica folosită la dezinfecție și dezinsecție, deci animația arată meseria firmei. Pe calculator a rămas ștergerea cu mouse-ul, care e interactivă și funcționează bine acolo.
+
+### Cum funcționează tehnic
+
 - Murdăria e calculată **o singură dată** într-o textură. Să calculez petele pentru fiecare pixel la fiecare cadru era prea greu pentru telefoane.
 - Zona curățată e o **mască** desenată direct pe placa video, cu „ștampile” moi de burete sau de ceață.
 - Shader-ul de la fiecare cadru doar amestecă poza murdară cu cea curată, după mască. Tot el desenează stratul verde care păstrează textul lizibil.
@@ -126,10 +155,42 @@ Cum funcționează tehnic:
 - Three.js se încarcă separat, **după** ce pagina e afișată. Pe telefon randez la rezoluție mai mică și la ~30 de cadre pe secundă.
 - Dacă ai setat „reducerea animațiilor” în sistem, poza se vede direct, fără efect.
 
+## Performanță (Lighthouse)
+
+Măsurat pe site-ul de pe Vercel (build de producție), în Lighthouse 13:
+
+| | Performance | Accessibility | Best Practices | SEO |
+|---|---|---|---|---|
+| **Mobil** (Moto G Power simulat, 4G lent) | 75 | 100 | 100 | 100 |
+| **Desktop** | *[de completat]* | *[de completat]* | *[de completat]* | *[de completat]* |
+
+Metrici pe mobil:
+
+| First Contentful Paint | Largest Contentful Paint | Total Blocking Time | Cumulative Layout Shift | Speed Index |
+|---|---|---|---|---|
+| 1,1 s | 2,4 s | 1.080 ms | 0 | 1,5 s |
+
+**Ce trage scorul în jos:** aproape tot Total Blocking Time-ul, adică timpul în care pagina e ocupată și nu răspunde la atingeri. Vine din animația Three.js: descărcarea și rularea librăriei (~165 KB de JavaScript nefolosit la prima afișare) și compilarea shaderelor. Pe un telefon slab simulat (procesor încetinit de 4 ori), asta înseamnă câteva „long tasks” chiar în timpul măsurătorii. Restul e bun: textul apare în ~1 s, iar pagina nu „sare” deloc la încărcare (CLS 0).
+
+**Ce am făcut ca să reduc costul animației:**
+- Three.js e încărcat într-un fișier separat, cu `next/dynamic`, abia după evenimentul `load` și când browserul e liber (`requestIdleCallback`). Textul, butoanele și formularul funcționează înainte de animație.
+- Murdăria e „coaptă” o singură dată într-o textură, nu recalculată la fiecare cadru.
+- Masca pentru zona curățată e desenată direct pe placa video. Prima variantă, un canvas 2D copiat la fiecare cadru, bloca telefoanele.
+- `frameloop="demand"`: canvas-ul desenează doar când se mișcă ceva și se oprește complet când hero-ul iese din ecran.
+- Pe telefon: rezoluție mai mică (`dpr` maxim 1), ~30 de cadre pe secundă în loc de 60, fără scântei, iar animația rulează o singură dată.
+- Lancea nebulizatorului e făcută din forme simple, fără un model 3D de câțiva MB.
+- Cu „reducerea animațiilor” activată în sistem, efectul nu mai rulează.
+
+**Compromisul.** Am testat și o variantă în care animația pornea cu încă ~2 secunde mai târziu. Munca grea ieșea astfel din fereastra măsurată de Lighthouse și scorul ar fi crescut. În schimb, pe telefon hero-ul rămânea verde, fără nimic, 3–4 secunde, iar asta strica prima impresie. Am ales animația la timp și un scor de Performance mai mic. Pentru un site real de prezentare, unde contează și conversia, aș reevalua alegerea după date reale de la vizitatori (Core Web Vitals din Vercel Analytics), nu doar după testul simulat.
+
+**Lecție:** prima măsurătoare am făcut-o pe serverul de dezvoltare (`npm run dev`) și a ieșit 69, din cauza codului neminificat și a verificărilor React din modul de dezvoltare. Scorurile relevante sunt doar cele pe build-ul de producție.
+
 ## Decizii și compromisuri
 
-- **Animații diferite pe calculator și pe telefon.** Pe telefon, ștersul cu degetul se confunda cu scroll-ul paginii și era greu de folosit, așa că acolo animația e automată. Înainte de nebulizator am încercat o ștergere automată simplă și un trafalet, dar trafaletul ducea cu gândul la zugrăvit, nu la dezinfecție.
-- **Performance ~75 pe mobil în Lighthouse.** Scorul mai mic vine din Total Blocking Time (~1 s): încărcarea Three.js și pregătirea shaderelor pe un telefon slab simulat. Am testat o variantă cu animația pornită cu câteva secunde mai târziu. Scorul creștea, dar hero-ul rămânea prea mult timp gol, așa că am ales experiența vizuală. Accessibility, Best Practices și SEO sunt la 100.
+- **O singură animație, legată de mesaj.** Am renunțat la bulele de săpun, deși arătau bine, ca să rămână un singur efect principal, în hero, care spune povestea „spațiile tale rămân curate”.
+- **Animații diferite pe calculator și pe telefon.** Pe calculator, ștersul cu mouse-ul e interactiv și merge fluid. Pe telefon, ștersul cu degetul se confunda cu scroll-ul și se bloca pe telefoanele slabe, așa că acolo animația e automată (nebulizatorul) și rulează o singură dată. Compromisul: pe telefon vizitatorul doar privește, nu interacționează.
+- **Forme 3D simple în loc de modele descărcate.** Lancea nebulizatorului e construită din câțiva cilindri și un con în Three.js. Un model de pe Sketchfab ar fi avut câțiva MB, ar fi încetinit încărcarea pe telefon și ar fi cerut atribuirea autorului.
+- **Performance mai mic pe mobil, în schimbul animației.** Detalii în secțiunea [Performanță (Lighthouse)](#performanță-lighthouse).
 - **Formularul nu trimite nimic.** Validează numele, telefonul (format românesc: `07xxxxxxxx` sau `+407xxxxxxxx`) și mesajul, apoi afișează confirmarea. Pentru un site real ar trebui un backend sau un serviciu de email (de exemplu Resend sau Formspree), plus protecție anti-spam.
 - **Next.js în loc de Vite.** Am pornit cu Vite, apoi am trecut pe Next.js pentru HTML generat la build, optimizarea automată a imaginilor și a fonturilor și favicon-ul generat din SVG.
 - **Tema dark.** Respectă setarea sistemului, iar alegerea se salvează în browser. Tema se aplică înainte să apară pagina, ca să nu „clipească” din alb în negru.
