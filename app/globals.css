@@ -53,6 +53,11 @@
     scroll-behavior: smooth;
   }
 
+  /* navbar-ul e fix sus: la click pe un link, sectiunea se opreste sub el, nu ascunsa de el */
+  section[id] {
+    scroll-margin-top: 96px;
+  }
+
   body {
     /* fundalul din jurul site-ului e mai inchis decat secțiunile, ca in dark mode, ca sa iasa cardul in evidenta */
     @apply bg-[#E1D9C8] dark:bg-forest-deep text-typography font-sans antialiased transition-colors;

@@ -30,7 +30,9 @@ export default function Navbar() {
     }, [openMenu])
 
     return (
-        <header className="bg-forest text-white">
+        // ramane lipit sus cand derulezi pagina, ca meniul si butonul de oferta sa fie mereu la indemana.
+        // fara backdrop-blur: ar strica meniul mobil (care e "fixed" pe tot ecranul)
+        <header className="sticky top-0 z-40 bg-forest text-white shadow-lg shadow-black/10">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 py-5 sm:py-6 flex items-center justify-between border-b border-white/10">
                 <a href="#" className="flex items-center gap-3.5">
                     {/* alt gol: logo-ul e decorativ, numele e scris imediat langa el */}
