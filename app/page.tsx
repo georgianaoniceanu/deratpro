@@ -1,8 +1,23 @@
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import Services from "@/components/Services";
+import WhyUs from "@/components/WhyUs";
+import HowItWorks from "@/components/HowItWorks";
+import Contact from "@/components/Contact";
+import Footer from "@/components/Footer";
+
 export default function Home() {
   return (
-    <h1 className="bg-forest text-white text-5xl font-extrabold p-10">
-      Cu DeratPro, spațiile tale rămân{" "}
-      <span className="font-serif italic text-mustard">curate</span>
-    </h1>
+    <>
+      <Navbar />
+      <main>
+        <Hero />
+        <Services />
+        <WhyUs />
+        <HowItWorks />
+        <Contact />
+      </main>
+      <Footer />
+    </>
   );
 }
