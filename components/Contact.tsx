@@ -10,17 +10,27 @@ interface Form{
 export default function Contact(){
     const [form, setForm] = useState<Form>({nume: "", telefon: "", mesaj: ""})
     const [error, setError] = useState<Form>({nume: "", telefon: "", mesaj:""})
-    const validate = ({nume, telefon, mesaj}:Form) => {
+    const [sent, setSent] = useState(false)
+    const validate = ({nume, telefon, mesaj}:Form): Form => {
+        const errors: Form = {nume: "", telefon: "", mesaj: ""}
+
         if(nume.trim().length < 2){
-            setError({...error, nume: "Numele are sub 2 caractere"})
-        } else if(telefon.trim() !== "^(\+40|0)7\d{8}"){
-            setError({...error, telefon: "Telefonul e in format gresit. Corect: 0720 000 000"})
-        } else if(mesaj.trim().length < 10){
-            setError({...error, mesaj: "Mesajul are sub 10 caractere"})
+            errors.nume = "Introdu numele tău (minimum 2 caractere)."
         }
-        return error
+
+        const phone = telefon.replace(/[\s-]/g, "")
+        if(!/^(\+40|0)7\d{8}$/.test(phone)){
+            errors.telefon = "Numărul nu pare valid. Exemplu: 0720 000 000."
+        }
+
+        if(mesaj.trim().length < 10){
+            errors.mesaj = "Descrie pe scurt problema (minimum 10 caractere)."
+        }
+
+        return errors
     }
     const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)=>{
+        setSent(false)
         const {name, value} = e.target
         setForm(prev => ({ ...prev, [name]: value }))
     }
@@ -30,7 +40,8 @@ export default function Contact(){
         setError(found)
         const hasErrors = Object.values(found).some(msg => msg !== "")
         if(hasErrors) return
-        console.log("Formular valid: ", form)
+        setSent(true)
+        setForm({nume: "", telefon: "", mesaj: ""})
     }
     return(
         <section id="contact">
@@ -70,6 +81,10 @@ export default function Contact(){
                     aria-describedby={error.mesaj ? "mesaj-error" : undefined}/>
                 {error.mesaj && <p id="mesaj-error">{error.mesaj}</p>}
                 <button type="submit">Trimite cererea</button>
+
+                <div aria-live="polite">
+                    {sent && <p>Mulțumim! Am primit cererea ta și te sunăm în cel mai scurt timp.</p>}
+                </div>
             </form>
         </section>
     )
