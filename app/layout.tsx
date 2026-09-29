@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* aplica tema salvata (sau cea a sistemului) inainte sa apara pagina, ca sa nu "clipeasca" din alb in negru */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`,
+            __html: `document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`,
           }}
         />
       </head>

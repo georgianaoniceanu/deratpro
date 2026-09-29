@@ -1,4 +1,5 @@
 import { Clock, ShieldCheck, UserCheck, BadgeCheck } from "lucide-react"
+import type { CSSProperties } from "react"
 import { advantages } from "../data/date"
 import Stats from "./Stats"
 
@@ -9,7 +10,7 @@ export default function WhyUs(){
     return(
         <section id="de-ce-noi" className="bg-sand-light py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-12">
+                <h2 data-reveal className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-12">
                     De ce să alegi DeratPro?
                 </h2>
 
@@ -17,7 +18,7 @@ export default function WhyUs(){
                     {advantages.map((a, i) => {
                         const Icon = icons[i]
                         return (
-                            <li key={a.title}>
+                            <li key={a.title} data-reveal style={{ "--reveal-delay": `${i * 100}ms` } as CSSProperties}>
                                 <div className="w-12 h-12 rounded-xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center mb-5">
                                     <Icon size={24} aria-hidden="true" />
                                 </div>

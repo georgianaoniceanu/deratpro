@@ -2,7 +2,7 @@
 import { Phone, Mail, Clock } from "lucide-react"
 import {contactInfo} from "../data/date"
 import { useState } from "react"
-import { ChangeEvent, SubmitEvent } from "react"
+import type { ChangeEvent, CSSProperties, SubmitEvent } from "react"
 interface Form{
     nume: string,
     telefon: string,
@@ -55,7 +55,7 @@ export default function Contact(){
     return(
         <section id="contact" className="bg-sand-light py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-                <div>
+                <div data-reveal>
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-6">
                         {/* pe fundal deschis, mustarul e prea slab ca contrast; folosim un auriu mai inchis */}
                         Suntem aici să te <span className="font-serif font-semibold italic text-[#9A6410] dark:text-mustard">ajutăm</span>
@@ -102,7 +102,7 @@ export default function Contact(){
                     </address>
                 </div>
 
-                <div className="bg-sand dark:bg-forest-surface rounded-3xl p-6 sm:p-10 border border-sand-dark shadow-lg">
+                <div data-reveal style={{ "--reveal-delay": "150ms" } as CSSProperties} className="bg-sand dark:bg-forest-surface rounded-3xl p-6 sm:p-10 border border-sand-dark shadow-lg">
                     <h3 className="text-2xl font-bold mb-2">Solicită intervenție</h3>
                     <p className="text-base text-typography-muted mb-8">
                         Completează datele de mai jos și un specialist te va contacta în cel mai scurt timp.

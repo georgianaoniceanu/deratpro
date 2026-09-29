@@ -59,8 +59,61 @@
   }
 }
 
+/* ---------- aparitie la scroll (vezi components/RevealOnScroll.tsx) ----------
+   ascundem elementele doar daca ruleaza JavaScript (clasa "js" pusa in layout), altfel ar ramane invizibile.
+   folosim animatii, nu tranzitii, ca intarzierea sa nu afecteze hover-ul de dupa. */
+.js [data-reveal]:not(.is-visible) {
+  opacity: 0;
+}
+
+.js [data-reveal].is-visible {
+  animation: reveal-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--reveal-delay, 0ms) both;
+}
+
+/* linia dintre pasi se "deseneaza": pe orizontala pe desktop, pe verticala pe telefon */
+.js [data-reveal="line-x"].is-visible {
+  transform-origin: left center;
+  animation: draw-x 1.4s ease-in-out var(--reveal-delay, 0ms) both;
+}
+
+.js [data-reveal="line-y"].is-visible {
+  transform-origin: center top;
+  animation: draw-y 1.4s ease-in-out var(--reveal-delay, 0ms) both;
+}
+
+/* cercurile cu numere se "aprind" pe rand */
+.js [data-reveal="pop"].is-visible {
+  animation: pop 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) var(--reveal-delay, 0ms) both;
+}
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes draw-x {
+  from { opacity: 1; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes draw-y {
+  from { opacity: 1; transform: scaleY(0); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  /* fara animatii: totul apare direct */
+  .js [data-reveal] {
+    opacity: 1 !important;
+    animation: none !important;
   }
 }

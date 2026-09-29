@@ -5,6 +5,7 @@ import WhyUs from "@/components/WhyUs";
 import HowItWorks from "@/components/HowItWorks";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import RevealOnScroll from "@/components/RevealOnScroll";
 
 export default function Home() {
   return (
@@ -25,6 +26,9 @@ export default function Home() {
           <Footer />
         </div>
       </div>
+
+      {/* activeaza animatiile de aparitie la scroll (elementele cu data-reveal) */}
+      <RevealOnScroll />
     </>
   );
 }
