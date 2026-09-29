@@ -23,8 +23,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ro" className={`${jakarta.variable} ${playfair.variable}`}>
-      <body>{children}</body>
+    <html lang="ro" className={`${jakarta.variable} ${playfair.variable}`} suppressHydrationWarning>
+      {/* extensiile de browser adauga uneori atribute pe html/body inainte de React */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

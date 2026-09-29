@@ -26,7 +26,7 @@
   }
 
   body {
-    @apply bg-sand-light text-typography font-sans antialiased;
+    @apply bg-white text-typography font-sans antialiased;
   }
 }
 
