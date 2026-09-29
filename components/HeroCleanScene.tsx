@@ -9,6 +9,8 @@ const PHOTO_ASPECT = 2400 / 2053
 const BRUSH_PX = 70 // raza "buretelui" in pixeli de ecran
 const IDLE_AFTER = 9 // secunde fara stergere dupa care masca e sigur complet murdara si ne oprim din desenat
 const MAX_STAMPS = 512 // cate "stampile" de burete desenam maxim intr-un cadru
+const AUTO_EVERY = 7 // pe telefon: o stergere automata la fiecare 7 secunde
+const SWEEP_SECONDS = 2.2 // cat dureaza o stergere automata pe telefon
 
 // un dreptunghi care acopera tot canvas-ul, fara camera
 const vertexShader = `
@@ -242,6 +244,7 @@ function CleanPlane() {
     const pending = useRef<{ x: number; y: number }[]>([]) // puncte noi, in pixeli de ecran relativi la canvas
     const last = useRef<{ x: number; y: number } | null>(null)
     const start = useRef<number | null>(null)
+    const sweeping = useRef(false) // daca in cadrul anterior rula o stergere automata
     const sparkPoints = useRef<THREE.Points>(null)
     const sparks = useRef<SparkData | null>(null)
     const [sparkUniforms] = useState(() => ({ uPixelRatio: { value: 1 } }))
@@ -423,34 +426,28 @@ function CleanPlane() {
         const onPointer = (e: PointerEvent) => {
             if (e.pointerType === "mouse" || e.pointerType === "pen") addPoint(e.clientX, e.clientY)
         }
-        // pe telefon, cand tragi cu degetul browserul deruleaza pagina si opreste evenimentele "pointer";
-        // evenimentele "touch" continua si in timpul derularii, deci le folosim pe ele pentru deget
-        const onTouch = (e: TouchEvent) => {
-            const touch = e.touches[0]
-            if (touch) addPoint(touch.clientX, touch.clientY)
-        }
-        const onTouchEnd = () => {
-            last.current = null
-        }
+        // pe telefoane nu stergem cu degetul: glisatul se confunda cu derularea paginii si era greu de folosit.
+        // acolo stergerea e automata (vezi useFrame)
 
         window.addEventListener("resize", measure)
         window.addEventListener("load", measure)
         window.addEventListener("pointermove", onPointer)
         window.addEventListener("pointerdown", onPointer)
-        window.addEventListener("touchstart", onTouch, { passive: true })
-        window.addEventListener("touchmove", onTouch, { passive: true })
-        window.addEventListener("touchend", onTouchEnd)
         return () => {
             resizeObserver.disconnect()
             window.removeEventListener("resize", measure)
             window.removeEventListener("load", measure)
             window.removeEventListener("pointermove", onPointer)
             window.removeEventListener("pointerdown", onPointer)
-            window.removeEventListener("touchstart", onTouch)
-            window.removeEventListener("touchmove", onTouch)
-            window.removeEventListener("touchend", onTouchEnd)
         }
     }, [gl, invalidate, size])
+
+    // pe telefoane, pornim din cand in cand cate o stergere automata (canvas-ul deseneaza doar la cerere)
+    useEffect(() => {
+        if (!coarse || reduceMotion) return
+        const id = setInterval(() => invalidate(), AUTO_EVERY * 1000)
+        return () => clearInterval(id)
+    }, [coarse, reduceMotion, invalidate])
 
     useFrame((state, delta) => {
         const mask = maskRef.current
@@ -458,14 +455,24 @@ function CleanPlane() {
         const t = state.clock.elapsedTime
         if (start.current === null) start.current = t
 
-        // la incarcare, o "stergere" automata pe partea dreapta, ca vizitatorul sa vada efectul
-        const intro = (t - start.current) / 1.8
-        const introRunning = !reduceMotion && intro <= 1
+        // stergerea automata:
+        // - pe calculator, o singura data la incarcare, ca vizitatorul sa vada efectul
+        // - pe telefon, se repeta la cateva secunde, cand dintr-o parte, cand din cealalta
+        const elapsed = t - start.current
+        const sweepTime = coarse ? elapsed % AUTO_EVERY : elapsed
+        const sweepIndex = coarse ? Math.floor(elapsed / AUTO_EVERY) : 0
+        const progress = sweepTime / (coarse ? SWEEP_SECONDS : 1.8)
+        const introRunning = !reduceMotion && progress <= 1
         if (introRunning) {
-            const x = size.width * (0.5 + 0.45 * intro)
-            const y = size.height * (0.72 - 0.45 * intro + Math.sin(intro * Math.PI * 3) * 0.08)
+            if (!sweeping.current) last.current = null // nu legam noua stergere de capatul celei vechi
+            const fromLeft = sweepIndex % 2 === 0
+            const x = coarse
+                ? size.width * (fromLeft ? 0.3 + 0.65 * progress : 0.95 - 0.65 * progress)
+                : size.width * (0.5 + 0.45 * progress)
+            const y = size.height * (0.72 - 0.45 * progress + Math.sin(progress * Math.PI * 3) * 0.08)
             pending.current.push({ x, y })
         }
+        sweeping.current = introRunning
 
         // pregatim stampilele de burete pentru punctele noi (in coordonate de ecran -1..1)
         const brush = Math.min(BRUSH_PX, size.width * 0.13)
@@ -515,7 +522,8 @@ function CleanPlane() {
             renderer.autoClear = false // desenam peste masca existenta, nu o stergem
             renderer.setRenderTarget(mask.target)
             if (fadeNow) {
-                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : 0.024
+                // pe telefon murdaria revine mai repede, ca fiecare stergere automata sa se vada pe o poza murdara
+                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : coarse ? 0.05 : 0.024
                 renderer.render(mask.fadeScene, mask.camera)
             }
             if (stamps > 0) {
@@ -549,7 +557,11 @@ function CleanPlane() {
         }
 
         // canvas-ul deseneaza doar la cerere: continuam cat timp inca se misca ceva, apoi ne oprim complet
-        if (introRunning || wiping || sparksActive) state.invalidate()
+        // pe telefon, ~30 de cadre pe secunda in loc de 60 (suficient pentru o stergere lenta, cu jumatate din efort)
+        if (introRunning || wiping || sparksActive) {
+            if (coarse) setTimeout(() => state.invalidate(), 33)
+            else state.invalidate()
+        }
     })
 
     return (

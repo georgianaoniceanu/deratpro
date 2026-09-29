@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Hand, MousePointer2 } from "lucide-react"
+import { MousePointer2 } from "lucide-react"
 
 const WIPE_DISTANCE = 200 // cati pixeli trebuie "sterși" peste hero pana dispare indiciul
 
@@ -52,13 +52,11 @@ export default function HeroHint() {
     return (
         <p
             aria-hidden="true"
-            className={`mt-8 flex items-center gap-2 text-sm text-gray-300 transition-opacity duration-700 ${hidden ? "opacity-0" : "opacity-100"}`}
+            // pe ecrane tactile nu apare: acolo stergerea e automata, nu se face cu degetul
+            className={`mt-8 flex items-center gap-2 text-sm text-gray-300 transition-opacity duration-700 [@media(pointer:coarse)]:hidden ${hidden ? "opacity-0" : "opacity-100"}`}
         >
-            {/* pe dispozitive cu mouse: cursor; pe ecrane tactile: mana */}
-            <MousePointer2 size={18} className="text-mustard motion-safe:animate-pulse [@media(pointer:coarse)]:hidden" />
-            <Hand size={18} className="hidden text-mustard motion-safe:animate-pulse [@media(pointer:coarse)]:block" />
-            <span className="[@media(pointer:coarse)]:hidden">Trece cu mouse-ul peste imagine ca să o cureți</span>
-            <span className="hidden [@media(pointer:coarse)]:inline">Glisează peste imagine ca să o cureți</span>
+            <MousePointer2 size={18} className="text-mustard motion-safe:animate-pulse" />
+            <span>Trece cu mouse-ul peste imagine ca să o cureți</span>
         </p>
     )
 }
