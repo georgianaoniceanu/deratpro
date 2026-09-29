@@ -10,8 +10,9 @@ export default function WhyUs(){
     return(
         <section id="de-ce-noi" className="bg-sand-light py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                <h2 data-reveal className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-12">
-                    De ce să alegi DeratPro?
+                <h2 data-reveal className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white w-fit mx-auto sm:mx-0 text-left mb-12">
+                    {/* pe telefon, titlul pe doua randuri aliniate la stanga, iar blocul centrat */}
+                    De ce să<br className="sm:hidden" /> alegi DeratPro?
                 </h2>
 
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

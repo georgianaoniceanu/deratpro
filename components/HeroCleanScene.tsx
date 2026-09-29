@@ -188,9 +188,9 @@ const fragmentShader = `
     // desktop: plin in stanga (sub text), tot mai transparent spre dreapta
     // telefon: mai inchis sus (sub titlu), mai transparent jos
     float wide = mix(1.0, 0.85, smoothstep(0.0, 0.5, vUv.x)) - smoothstep(0.5, 1.0, vUv.x) * 0.55;
-    float tall = mix(0.45, 0.85, smoothstep(0.0, 1.0, vUv.y));
+    float tall = mix(0.55, 0.9, smoothstep(0.0, 1.0, vUv.y));
     float overlay = mix(tall, wide, uWide);
-    overlay *= 1.0 - m * 0.5;
+    overlay *= 1.0 - m * 0.3; // dupa curatare stratul se deschide doar putin, ca textul sa ramana lizibil
     color = mix(color, uForest, overlay);
 
     gl_FragColor = vec4(color, 1.0);

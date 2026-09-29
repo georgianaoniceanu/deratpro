@@ -23,10 +23,11 @@ export default function Hero() {
             <HeroClean />
 
             <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12">
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] mb-6 text-balance">
+                {/* titlul si textul au o umbra discreta, ca sa ramana lizibile si peste zonele luminoase ale pozei curatate */}
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] mb-6 text-balance [text-shadow:0_2px_14px_rgb(0_0_0/0.55)]">
                     Cu DeratPro, spațiile tale rămân <span className="font-serif italic text-mustard">curate</span>
                 </h1>
-                <p className="text-lg lg:text-xl text-gray-300 leading-relaxed max-w-2xl mb-9">
+                <p className="text-lg lg:text-xl text-white/90 leading-relaxed max-w-2xl mb-9 [text-shadow:0_1px_10px_rgb(0_0_0/0.6)]">
                     Servicii complete de deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale din {contactInfo.area}. Intervenții rapide, sigure și garantate.
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
