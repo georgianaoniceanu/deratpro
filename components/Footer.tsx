@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Phone, Mail } from "lucide-react"
 import { navLinks, contactInfo } from "@/data/date"
 
@@ -34,8 +35,11 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-x-20 sm:gap-y-16 lg:gap-12">
                     <div>
-                        <a href="#" className="text-3xl font-extrabold tracking-tight">
-                            Derat<span className="text-mustard">Pro</span>
+                        <a href="#" className="inline-flex items-center gap-3 text-3xl font-extrabold tracking-tight">
+                            <Image src="/logo.svg" alt="" width={44} height={44} className="w-11 h-11" />
+                            <span>
+                                Derat<span className="text-mustard">Pro</span>
+                            </span>
                         </a>
                         <p className="mt-4 text-base text-gray-300 leading-relaxed max-w-xs">
                             Deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale.

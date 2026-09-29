@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="logo-title">
+  <title id="logo-title">DeratPro</title>
+  <defs>
+    <!-- conturul scutului, folosit de doua ori (jumatatea stanga si cea dreapta) -->
+    <path id="shield" d="M32 4 L56 12 V30 C56 45 45.5 55 32 60 C18.5 55 8 45 8 30 V12 Z" />
+    <clipPath id="left-half"><rect x="0" y="0" width="32" height="64" /></clipPath>
+    <clipPath id="right-half"><rect x="32" y="0" width="32" height="64" /></clipPath>
+  </defs>
+
+  <!-- scut in doua nuante de mustar -->
+  <use href="#shield" fill="#E5A93C" clip-path="url(#left-half)" />
+  <use href="#shield" fill="#B97F17" clip-path="url(#right-half)" />
+
+  <!-- interiorul crem, ca logo-ul sa se vada si pe fundal verde inchis, si pe alb -->
+  <path d="M32 13 L47 18 V30 C47 40 40.5 47 32 51 C23.5 47 17 40 17 30 V18 Z" fill="#FBF9F5" />
+
+  <!-- frunza verde inchis, cu nervura in forma de bifa -->
+  <path d="M22 40.5 C21 30 29 23 42.5 22 C43.5 34 35.5 41.5 24 41.5 Z" fill="#0F2318" />
+  <path d="M26 33.5 L30.5 37.5 L38 28.5" fill="none" stroke="#E5A93C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

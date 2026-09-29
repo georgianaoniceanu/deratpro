@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ShieldCheck, Menu, X, ChevronRight, Phone } from "lucide-react"
+import Image from "next/image"
+import { Menu, X, ChevronRight, Phone } from "lucide-react"
 import { navLinks, contactInfo } from "../data/date"
 
 export default function Navbar() {
@@ -31,9 +32,8 @@ export default function Navbar() {
         <header className="bg-forest text-white">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 py-5 sm:py-6 flex items-center justify-between border-b border-white/10">
                 <a href="#" className="flex items-center gap-3.5">
-                    <span className="w-12 h-12 rounded-xl bg-mustard/15 border border-mustard/30 flex items-center justify-center text-mustard">
-                        <ShieldCheck size={28} aria-hidden="true" />
-                    </span>
+                    {/* alt gol: logo-ul e decorativ, numele e scris imediat langa el */}
+                    <Image src="/logo.svg" alt="" width={48} height={48} priority className="w-12 h-12" />
                     <span className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                         Derat<span className="text-mustard">Pro</span>
                     </span>
@@ -78,9 +78,7 @@ export default function Navbar() {
                     <div>
                         <div className="flex items-center justify-between pb-6 border-b border-white/10">
                             <a href="#" onClick={() => setOpenMenu(false)} className="flex items-center gap-3.5">
-                                <span className="w-11 h-11 rounded-xl bg-mustard/15 border border-mustard/30 flex items-center justify-center text-mustard">
-                                    <ShieldCheck size={24} aria-hidden="true" />
-                                </span>
+                                <Image src="/logo.svg" alt="" width={44} height={44} className="w-11 h-11" />
                                 <span className="text-2xl font-extrabold tracking-tight">
                                     Derat<span className="text-mustard">Pro</span>
                                 </span>
