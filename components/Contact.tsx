@@ -57,10 +57,10 @@ export default function Contact(){
             <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                 <div>
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest text-balance mb-6">
-                        Suntem aici să te <span className="font-serif font-semibold italic">ajutăm</span>
+                        Suntem aici să te <span className="font-serif font-semibold italic text-mustard">ajutăm</span>
                     </h2>
                     <p className="text-lg text-typography-muted leading-relaxed max-w-md mb-10">
-                        Scapă de dăunători rapid și în deplină siguranță. Contactează-ne pentru o estimare gratuită.
+                        Scapă de dăunători rapid și în deplină siguranță. Contactează echipa DeratPro pentru o estimare gratuită și programare imediată.
                     </p>
 
                     <address className="not-italic space-y-6">
@@ -81,7 +81,7 @@ export default function Contact(){
                                 <Mail size={20} aria-hidden="true" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Email</p>
+                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Email suport</p>
                                 <a href={`mailto:${contactInfo.email}`} className="text-lg font-semibold text-forest hover:text-mustard-hover transition-colors">
                                     {contactInfo.email}
                                 </a>
@@ -93,8 +93,9 @@ export default function Contact(){
                                 <Clock size={20} aria-hidden="true" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Program</p>
+                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Program de lucru</p>
                                 <p className="text-base font-medium text-forest">{contactInfo.schedule}</p>
+                                <p className="text-base font-bold text-forest mt-1">Intervenții de urgență non-stop</p>
                             </div>
                         </div>
                     </address>
