@@ -56,46 +56,46 @@ export default function Contact(){
         <section id="contact" className="bg-sand py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                 <div>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance mb-6">
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-6">
                         Suntem aici să te <span className="font-serif font-semibold italic text-mustard">ajutăm</span>
                     </h2>
-                    <p className="text-lg text-typography-muted leading-relaxed max-w-md mb-10">
+                    <p className="text-lg text-typography-muted leading-relaxed max-w-md mb-12 lg:mb-20">
                         Scapă de dăunători rapid și în deplină siguranță. Contactează echipa DeratPro pentru o estimare gratuită și programare imediată.
                     </p>
 
-                    <address className="not-italic space-y-6">
-                        <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 shrink-0 rounded-xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
-                                <Phone size={20} aria-hidden="true" />
+                    <address className="not-italic space-y-8">
+                        <div className="flex items-start gap-5">
+                            <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
+                                <Phone size={24} aria-hidden="true" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Telefon urgențe</p>
-                                <a href={contactInfo.phoneHref} className="text-2xl font-extrabold text-forest dark:text-white hover:text-mustard-hover transition-colors">
+                                <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Telefon urgențe</p>
+                                <a href={contactInfo.phoneHref} className="text-3xl font-extrabold text-forest dark:text-white hover:text-mustard-hover transition-colors">
                                     {contactInfo.phoneDisplay}
                                 </a>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 shrink-0 rounded-xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
-                                <Mail size={20} aria-hidden="true" />
+                        <div className="flex items-start gap-5">
+                            <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
+                                <Mail size={24} aria-hidden="true" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Email suport</p>
-                                <a href={`mailto:${contactInfo.email}`} className="text-lg font-semibold text-forest dark:text-white hover:text-mustard-hover transition-colors">
+                                <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Email suport</p>
+                                <a href={`mailto:${contactInfo.email}`} className="text-xl font-semibold text-forest dark:text-white hover:text-mustard-hover transition-colors">
                                     {contactInfo.email}
                                 </a>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 shrink-0 rounded-xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
-                                <Clock size={20} aria-hidden="true" />
+                        <div className="flex items-start gap-5">
+                            <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
+                                <Clock size={24} aria-hidden="true" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Program de lucru</p>
-                                <p className="text-base font-medium text-forest dark:text-gray-200">{contactInfo.schedule}</p>
-                                <p className="text-base font-bold text-forest dark:text-white mt-1">Intervenții de urgență non-stop</p>
+                                <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Program de lucru</p>
+                                <p className="text-lg font-medium text-forest dark:text-gray-200">{contactInfo.schedule}</p>
+                                <p className="text-lg font-bold text-forest dark:text-white mt-1">Intervenții de urgență non-stop</p>
                             </div>
                         </div>
                     </address>
