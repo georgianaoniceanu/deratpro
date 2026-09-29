@@ -7,7 +7,8 @@ import * as THREE from "three"
 // dimensiunile fotografiei din public/hero-bg.jpg (pentru incadrarea de tip "cover")
 const PHOTO_ASPECT = 2400 / 2053
 const BRUSH_PX = 70 // raza "buretelui" in pixeli de ecran
-const IDLE_AFTER = 10 // secunde fara stergere dupa care masca e sigur complet murdara (nu mai o actualizam)
+const IDLE_AFTER = 9 // secunde fara stergere dupa care masca e sigur complet murdara si ne oprim din desenat
+const MAX_STAMPS = 512 // cate "stampile" de burete desenam maxim intr-un cadru
 
 // un dreptunghi care acopera tot canvas-ul, fara camera
 const vertexShader = `
@@ -42,7 +43,7 @@ const shaderCommon = `
 `
 
 // 1) "coacerea" murdariei: se ruleaza O SINGURA DATA (si la redimensionare), iar rezultatul se salveaza intr-o textura.
-// pe telefoane, sa calculam petele si praful pentru fiecare pixel la fiecare cadru era prea greu
+// sa calculam petele si praful pentru fiecare pixel la fiecare cadru era prea greu pentru telefoane
 const bakeFragmentShader = `
   uniform float uAspect;
   ${shaderCommon}
@@ -116,6 +117,27 @@ const fragmentShader = `
   }
 `
 
+// 3) masca, desenata direct pe placa video (nu intr-un canvas 2D copiat la fiecare cadru, care era lent pe telefon):
+//    - "stampile" de burete: puncte rotunde, albe, cu margini moi
+//    - "murdarirea" la loc: un dreptunghi negru, aproape transparent, desenat peste masca
+const stampVertexShader = `
+  uniform float uSize;
+  void main() {
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+    gl_PointSize = uSize;
+  }
+`
+const stampFragmentShader = `
+  void main() {
+    float d = length(gl_PointCoord - 0.5);
+    gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.15, d) * 0.9);
+  }
+`
+const fadeFragmentShader = `
+  uniform float uFade;
+  void main() { gl_FragColor = vec4(0.0, 0.0, 0.0, uFade); }
+`
+
 // ---------- scantei pe urma buretelui ----------
 const SPARKS = 48 // cate scantei pot exista in acelasi timp (le refolosim prin rotatie)
 const SPARK_EVERY_PX = 26 // o scanteie noua la fiecare ~26px sterși
@@ -158,13 +180,17 @@ type SparkData = {
 }
 
 type MaskData = {
-    canvas: HTMLCanvasElement
-    ctx: CanvasRenderingContext2D
-    texture: THREE.CanvasTexture
-    brush: HTMLCanvasElement // "pensula": un cerc alb estompat, desenat o singura data
+    target: THREE.WebGLRenderTarget
+    scale: number // cati pixeli de masca la un pixel de ecran
+    fadeScene: THREE.Scene
+    fadeMaterial: THREE.ShaderMaterial
+    stampScene: THREE.Scene
+    stampGeometry: THREE.BufferGeometry
+    stampPositions: Float32Array
+    stampMaterial: THREE.ShaderMaterial
+    camera: THREE.Camera
     frame: number
     lastWipe: number // cand s-a sters ultima data (secunde)
-    changed: boolean
 }
 
 type BakeData = {
@@ -186,8 +212,14 @@ function coverUv(canvasAspect: number) {
     return { scale: new THREE.Vector2(sx, 1), offset: new THREE.Vector2(1 - sx, 0) }
 }
 
+function fullscreenQuad(material: THREE.ShaderMaterial) {
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material)
+    quad.frustumCulled = false
+    return quad
+}
+
 function CleanPlane() {
-    const { size, gl } = useThree()
+    const { size, gl, invalidate } = useThree()
     const photo = useLoader(THREE.TextureLoader, "/hero-bg.jpg")
     const reduceMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, [])
     const coarse = useMemo(() => window.matchMedia("(pointer: coarse)").matches, [])
@@ -241,27 +273,60 @@ function CleanPlane() {
         return () => geometry.dispose()
     }, [gl])
 
-    // masca: un canvas 2D in care desenam cu alb pe unde trece mouse-ul; negru = murdar
+    // masca pe placa video: o textura in care desenam direct stampilele de burete si "murdarirea"
     useEffect(() => {
-        const canvas = document.createElement("canvas")
-        const ctx = canvas.getContext("2d")!
-        const texture = new THREE.CanvasTexture(canvas)
+        const camera = new THREE.Camera()
+        const target = new THREE.WebGLRenderTarget(1, 1, { depthBuffer: false })
 
-        // pensula: un cerc alb cu margini moi, pregatit o singura data (desenarea cu blur la fiecare cadru era lenta)
-        const brush = document.createElement("canvas")
-        brush.width = brush.height = 64
-        const bctx = brush.getContext("2d")!
-        const gradient = bctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-        gradient.addColorStop(0, "rgba(255,255,255,1)")
-        gradient.addColorStop(0.55, "rgba(255,255,255,0.9)")
-        gradient.addColorStop(1, "rgba(255,255,255,0)")
-        bctx.fillStyle = gradient
-        bctx.fillRect(0, 0, 64, 64)
+        const fadeMaterial = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader: fadeFragmentShader,
+            uniforms: { uFade: { value: 0 } },
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+        })
+        const fadeScene = new THREE.Scene()
+        fadeScene.add(fullscreenQuad(fadeMaterial))
 
-        maskRef.current = { canvas, ctx, texture, brush, frame: 0, lastWipe: 0, changed: true }
-        if (materialRef.current) materialRef.current.uniforms.uMask.value = texture
-        return () => texture.dispose()
-    }, [])
+        const stampPositions = new Float32Array(MAX_STAMPS * 3)
+        const stampGeometry = new THREE.BufferGeometry()
+        stampGeometry.setAttribute("position", new THREE.BufferAttribute(stampPositions, 3))
+        const stampMaterial = new THREE.ShaderMaterial({
+            vertexShader: stampVertexShader,
+            fragmentShader: stampFragmentShader,
+            uniforms: { uSize: { value: 1 } },
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+        })
+        const stampPoints = new THREE.Points(stampGeometry, stampMaterial)
+        stampPoints.frustumCulled = false
+        const stampScene = new THREE.Scene()
+        stampScene.add(stampPoints)
+
+        maskRef.current = {
+            target,
+            // pe telefon, masca are rezolutie mai mica (e oricum estompata)
+            scale: coarse ? 0.35 : 0.5,
+            fadeScene,
+            fadeMaterial,
+            stampScene,
+            stampGeometry,
+            stampPositions,
+            stampMaterial,
+            camera,
+            frame: 0,
+            lastWipe: -IDLE_AFTER,
+        }
+        if (materialRef.current) materialRef.current.uniforms.uMask.value = target.texture
+        return () => {
+            target.dispose()
+            fadeMaterial.dispose()
+            stampMaterial.dispose()
+            stampGeometry.dispose()
+        }
+    }, [coarse])
 
     // "cuptorul" pentru murdarie: o scena separata care deseneaza shader-ul greu intr-o textura
     useEffect(() => {
@@ -275,8 +340,7 @@ function CleanPlane() {
                 uAspect: { value: 1 },
             },
         })
-        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material)
-        quad.frustumCulled = false
+        const quad = fullscreenQuad(material)
         const scene = new THREE.Scene()
         scene.add(quad)
         const target = new THREE.WebGLRenderTarget(1, 1, { depthBuffer: false })
@@ -289,7 +353,7 @@ function CleanPlane() {
         }
     }, [photo])
 
-    // la redimensionare: incadram poza, refacem masca si "coacem" din nou murdaria la noua dimensiune
+    // la redimensionare: incadram poza, golim masca si "coacem" din nou murdaria la noua dimensiune
     useEffect(() => {
         const mask = maskRef.current
         const bake = bakeRef.current
@@ -299,21 +363,20 @@ function CleanPlane() {
         const canvasAspect = size.width / size.height
         const { scale, offset } = coverUv(canvasAspect)
 
-        // masca: pe telefon la rezolutie mai mica (e oricum estompata)
-        const maskWidth = coarse ? 256 : 512
-        mask.canvas.width = maskWidth
-        mask.canvas.height = Math.max(1, Math.round((maskWidth * size.height) / size.width))
-        mask.ctx.fillStyle = "black"
-        mask.ctx.fillRect(0, 0, mask.canvas.width, mask.canvas.height)
-        // canvas-ul si-a schimbat dimensiunea: textura trebuie realocata pe placa video, nu doar actualizata
-        mask.texture.dispose()
-        mask.texture.needsUpdate = true
-
         const u = material.uniforms
         u.uScale.value.copy(scale)
         u.uOffset.value.copy(offset)
         // acelasi prag ca "lg:" din Tailwind (1024px), unde si textul trece pe partea stanga
         u.uWide.value = window.innerWidth >= 1024 ? 1 : 0
+
+        const previousClear = gl.getClearColor(new THREE.Color())
+        const previousAlpha = gl.getClearAlpha()
+
+        // masca noua, complet neagra (= totul murdar)
+        mask.target.setSize(Math.max(1, Math.round(size.width * mask.scale)), Math.max(1, Math.round(size.height * mask.scale)))
+        gl.setRenderTarget(mask.target)
+        gl.setClearColor(0x000000, 1)
+        gl.clear()
 
         // coacem murdaria o singura data, la rezolutia reala a canvas-ului
         const b = bake.material.uniforms
@@ -324,8 +387,11 @@ function CleanPlane() {
         bake.target.setSize(Math.round(size.width * dpr), Math.round(size.height * dpr))
         gl.setRenderTarget(bake.target)
         gl.render(bake.scene, bake.camera)
+
         gl.setRenderTarget(null)
-    }, [size, gl, coarse])
+        gl.setClearColor(previousClear, previousAlpha)
+        invalidate()
+    }, [size, gl, invalidate])
 
     // mouse / deget: canvas-ul e sub text, asa ca ascultam pe window si verificam daca e peste hero
     useEffect(() => {
@@ -338,6 +404,7 @@ function CleanPlane() {
                 return
             }
             pending.current.push({ x, y })
+            invalidate() // desenam doar cand chiar se intampla ceva
         }
         const onPointer = (e: PointerEvent) => {
             if (e.pointerType === "mouse" || e.pointerType === "pen") addPoint(e.clientX, e.clientY)
@@ -364,48 +431,38 @@ function CleanPlane() {
             window.removeEventListener("touchmove", onTouch)
             window.removeEventListener("touchend", onTouchEnd)
         }
-    }, [gl])
+    }, [gl, invalidate])
 
     useFrame((state, delta) => {
         const mask = maskRef.current
         if (!mask) return
-        const { ctx, canvas, texture, brush: brushImage } = mask
         const t = state.clock.elapsedTime
         if (start.current === null) start.current = t
 
         // la incarcare, o "stergere" automata pe partea dreapta, ca vizitatorul sa vada efectul
         const intro = (t - start.current) / 1.8
-        if (!reduceMotion && intro <= 1) {
+        const introRunning = !reduceMotion && intro <= 1
+        if (introRunning) {
             const x = size.width * (0.5 + 0.45 * intro)
             const y = size.height * (0.72 - 0.45 * intro + Math.sin(intro * Math.PI * 3) * 0.08)
             pending.current.push({ x, y })
         }
 
-        // zonele curatate se "murdaresc" incet la loc. o facem o data la 3 cadre (cu pas triplu),
-        // si deloc dupa ce masca a ajuns complet neagra, ca sa nu trimitem degeaba textura la placa video
-        mask.frame++
-        if (mask.frame % 3 === 0 && t - mask.lastWipe < IDLE_AFTER) {
-            ctx.globalAlpha = 1
-            ctx.fillStyle = `rgba(0, 0, 0, ${reduceMotion ? 0.012 : 0.024})`
-            ctx.fillRect(0, 0, canvas.width, canvas.height)
-            mask.changed = true
-        }
-
-        // desenam traseul ca "stampile" din pensula pregatita, la distante mici una de alta
-        const k = canvas.width / size.width
+        // pregatim stampilele de burete pentru punctele noi (in coordonate de ecran -1..1)
         const brush = Math.min(BRUSH_PX, size.width * 0.13)
-        const stampSize = brush * 2.6 * k
         const sp = sparks.current
+        let stamps = 0
         for (const p of pending.current) {
             const from = last.current ?? p
             const dist = Math.hypot(p.x - from.x, p.y - from.y)
             const steps = Math.max(1, Math.ceil(dist / (brush * 0.35)))
-            for (let s = 1; s <= steps; s++) {
-                const x = (from.x + ((p.x - from.x) * s) / steps) * k
-                const y = (from.y + ((p.y - from.y) * s) / steps) * k
-                ctx.drawImage(brushImage, x - stampSize / 2, y - stampSize / 2, stampSize, stampSize)
+            for (let s = 1; s <= steps && stamps < MAX_STAMPS; s++) {
+                const x = from.x + ((p.x - from.x) * s) / steps
+                const y = from.y + ((p.y - from.y) * s) / steps
+                mask.stampPositions[stamps * 3] = (x / size.width) * 2 - 1
+                mask.stampPositions[stamps * 3 + 1] = 1 - (y / size.height) * 2
+                stamps++
             }
-            mask.changed = true
             mask.lastWipe = t
 
             // pe masura ce buretele avanseaza, lasam in urma cate o scanteie
@@ -415,13 +472,10 @@ function CleanPlane() {
                     sp.travelled -= SPARK_EVERY_PX
                     const i = sp.next
                     sp.next = (sp.next + 1) % SPARKS
-                    // pozitie aleatorie in zona sterse, transformata din pixeli in coordonate de ecran (-1..1)
                     const angle = Math.random() * Math.PI * 2
                     const r = Math.random() * brush * 0.9
-                    const sx = p.x + Math.cos(angle) * r
-                    const sy = p.y + Math.sin(angle) * r
-                    sp.positions[i * 3] = (sx / size.width) * 2 - 1
-                    sp.positions[i * 3 + 1] = 1 - (sy / size.height) * 2
+                    sp.positions[i * 3] = ((p.x + Math.cos(angle) * r) / size.width) * 2 - 1
+                    sp.positions[i * 3 + 1] = 1 - ((p.y + Math.sin(angle) * r) / size.height) * 2
                     sp.life[i] = 0
                     sp.duration[i] = 0.6 + Math.random() * 0.6
                     sp.baseSize[i] = 14 + Math.random() * 18
@@ -431,33 +485,51 @@ function CleanPlane() {
         }
         pending.current = []
 
-        // trimitem masca la placa video doar cand s-a schimbat ceva
-        if (mask.changed) {
-            texture.needsUpdate = true
-            mask.changed = false
+        // actualizam masca direct pe placa video: intai "murdarim" putin (o data la 3 cadre), apoi desenam stampilele
+        mask.frame++
+        const wiping = t - mask.lastWipe < IDLE_AFTER
+        const fadeNow = wiping && mask.frame % 3 === 0
+        if (fadeNow || stamps > 0) {
+            const renderer = state.gl
+            const autoClear = renderer.autoClear
+            renderer.autoClear = false // desenam peste masca existenta, nu o stergem
+            renderer.setRenderTarget(mask.target)
+            if (fadeNow) {
+                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : 0.024
+                renderer.render(mask.fadeScene, mask.camera)
+            }
+            if (stamps > 0) {
+                mask.stampGeometry.attributes.position.needsUpdate = true
+                mask.stampGeometry.setDrawRange(0, stamps)
+                mask.stampMaterial.uniforms.uSize.value = brush * 2.6 * mask.scale
+                renderer.render(mask.stampScene, mask.camera)
+            }
+            renderer.setRenderTarget(null)
+            renderer.autoClear = autoClear
         }
 
         // scanteile apar, clipesc si se sting
+        let sparksActive = false
         if (sp) {
             const dt = Math.min(delta, 0.05)
-            let active = false
             for (let i = 0; i < SPARKS; i++) {
                 if (sp.life[i] >= 1) {
                     sp.alphas[i] = 0
                     continue
                 }
-                active = true
+                sparksActive = true
                 sp.life[i] = Math.min(1, sp.life[i] + dt / sp.duration[i])
                 const glow = Math.sin(sp.life[i] * Math.PI) // 0 -> 1 -> 0
                 sp.alphas[i] = glow
                 sp.sizes[i] = sp.baseSize[i] * (0.4 + 0.6 * glow)
             }
-            if (active) {
-                sp.geometry.attributes.position.needsUpdate = true
-                sp.geometry.attributes.aAlpha.needsUpdate = true
-                sp.geometry.attributes.aSize.needsUpdate = true
-            }
+            sp.geometry.attributes.position.needsUpdate = true
+            sp.geometry.attributes.aAlpha.needsUpdate = true
+            sp.geometry.attributes.aSize.needsUpdate = true
         }
+
+        // canvas-ul deseneaza doar la cerere: continuam cat timp inca se misca ceva, apoi ne oprim complet
+        if (introRunning || wiping || sparksActive) state.invalidate()
     })
 
     return (
@@ -489,7 +561,7 @@ export default function HeroCleanScene() {
     // pe telefoane (ecran tactil) desenam la rezolutie mai mica: diferenta nu se vede, dar consuma mult mai putin
     const [maxDpr] = useState(() => (window.matchMedia("(pointer: coarse)").matches ? 1 : 1.5))
 
-    // animatia ruleaza doar cat timp hero-ul e pe ecran; dupa scroll se opreste si nu mai consuma baterie
+    // cand hero-ul iese de pe ecran, oprim complet desenarea
     useEffect(() => {
         const el = wrapper.current
         if (!el) return
@@ -505,7 +577,8 @@ export default function HeroCleanScene() {
                 flat
                 linear
                 dpr={[1, maxDpr]}
-                frameloop={visible ? "always" : "never"}
+                // "demand": deseneaza doar cand se schimba ceva (stergere, scantei), nu de 60 de ori pe secunda
+                frameloop={visible ? "demand" : "never"}
                 gl={{ antialias: false }}
                 style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
             >
