@@ -1,16 +1,35 @@
+import { Rat, Bug, SprayCan } from "lucide-react"
 import {services} from "../data/date"
+
+// iconita pentru fiecare serviciu, in aceeasi ordine ca in date.ts
+const icons = [Rat, Bug, SprayCan]
+
 export default function Services(){
     return(
-        <section id="servicii">
-            <h2>Serviciile noastre</h2>
-            <ul>
-                {services.map(s => (
-                    <li key={s.title}>
-                        <h3>{s.title}</h3>
-                        <p>{s.description}</p>
-                    </li>
-                ))}
-            </ul>
+        <section id="servicii" className="bg-sand-light py-20 lg:py-28 border-b border-sand-dark">
+            <div className="max-w-7xl mx-auto px-6 lg:px-12">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest text-balance">
+                    Serviciile noastre
+                </h2>
+                <p className="mt-3 text-lg text-typography-muted leading-relaxed max-w-2xl">
+                    Soluții profesionale pentru locuințe și afaceri.
+                </p>
+
+                <ul className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {services.map((s, i) => {
+                        const Icon = icons[i]
+                        return (
+                            <li key={s.title} className="h-full bg-white rounded-2xl p-8 lg:p-9 border border-sand-dark shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-16 h-16 rounded-2xl bg-sand flex items-center justify-center text-forest mb-8">
+                                    <Icon size={32} aria-hidden="true" />
+                                </div>
+                                <h3 className="text-2xl font-bold mb-4">{s.title}</h3>
+                                <p className="text-base text-typography-muted leading-relaxed">{s.description}</p>
+                            </li>
+                        )
+                    })}
+                </ul>
+            </div>
         </section>
     )
 }
