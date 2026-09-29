@@ -157,33 +157,18 @@ Ideea: firma curăță, deci poza din hero **se curăță** sub ochii vizitatoru
 
 ## Performanță (Lighthouse)
 
-Măsurat pe site-ul de pe Vercel (build de producție), în Lighthouse 13:
+Măsurat pe site-ul de pe Vercel:
 
 | | Performance | Accessibility | Best Practices | SEO |
 |---|---|---|---|---|
-| **Mobil** (Moto G Power simulat, 4G lent) | 75 | 100 | 100 | 100 |
-| **Desktop** | *[de completat]* | *[de completat]* | *[de completat]* | *[de completat]* |
+| **Desktop** | 97 | 100 | 100 | 100 |
+| **Mobil** | 75 | 100 | 100 | 100 |
 
-Metrici pe mobil:
+Scorul mai mic pe mobil vine din animația Three.js. Pe un telefon slab simulat, încărcarea librăriei și compilarea shaderelor blochează pagina ~1 s (Total Blocking Time). Pe desktop, aceeași animație blochează doar ~150 ms.
 
-| First Contentful Paint | Largest Contentful Paint | Total Blocking Time | Cumulative Layout Shift | Speed Index |
-|---|---|---|---|---|
-| 1,1 s | 2,4 s | 1.080 ms | 0 | 1,5 s |
+Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Canvas-ul desenează doar când se mișcă ceva, iar pe telefon randez la rezoluție mai mică și la ~30 de cadre pe secundă.
 
-**Ce trage scorul în jos:** aproape tot Total Blocking Time-ul, adică timpul în care pagina e ocupată și nu răspunde la atingeri. Vine din animația Three.js: descărcarea și rularea librăriei (~165 KB de JavaScript nefolosit la prima afișare) și compilarea shaderelor. Pe un telefon slab simulat (procesor încetinit de 4 ori), asta înseamnă câteva „long tasks” chiar în timpul măsurătorii. Restul e bun: textul apare în ~1 s, iar pagina nu „sare” deloc la încărcare (CLS 0).
-
-**Ce am făcut ca să reduc costul animației:**
-- Three.js e încărcat într-un fișier separat, cu `next/dynamic`, abia după evenimentul `load` și când browserul e liber (`requestIdleCallback`). Textul, butoanele și formularul funcționează înainte de animație.
-- Murdăria e „coaptă” o singură dată într-o textură, nu recalculată la fiecare cadru.
-- Masca pentru zona curățată e desenată direct pe placa video. Prima variantă, un canvas 2D copiat la fiecare cadru, bloca telefoanele.
-- `frameloop="demand"`: canvas-ul desenează doar când se mișcă ceva și se oprește complet când hero-ul iese din ecran.
-- Pe telefon: rezoluție mai mică (`dpr` maxim 1), ~30 de cadre pe secundă în loc de 60, fără scântei, iar animația rulează o singură dată.
-- Lancea nebulizatorului e făcută din forme simple, fără un model 3D de câțiva MB.
-- Cu „reducerea animațiilor” activată în sistem, efectul nu mai rulează.
-
-**Compromisul.** Am testat și o variantă în care animația pornea cu încă ~2 secunde mai târziu. Munca grea ieșea astfel din fereastra măsurată de Lighthouse și scorul ar fi crescut. În schimb, pe telefon hero-ul rămânea verde, fără nimic, 3–4 secunde, iar asta strica prima impresie. Am ales animația la timp și un scor de Performance mai mic. Pentru un site real de prezentare, unde contează și conversia, aș reevalua alegerea după date reale de la vizitatori (Core Web Vitals din Vercel Analytics), nu doar după testul simulat.
-
-**Lecție:** prima măsurătoare am făcut-o pe serverul de dezvoltare (`npm run dev`) și a ieșit 69, din cauza codului neminificat și a verificărilor React din modul de dezvoltare. Scorurile relevante sunt doar cele pe build-ul de producție.
+**Compromisul:** dacă porneam animația cu câteva secunde mai târziu, scorul creștea. În schimb, pe telefon hero-ul rămânea gol prea mult timp. Am ales animația la timp și un scor mai mic pe mobil.
 
 ## Decizii și compromisuri
 
@@ -200,7 +185,7 @@ Metrici pe mobil:
 ## Resurse
 
 - Inspirație design: [PureClean](https://dribbble.com/shots/27012712-Professional-Cleaning-Service-Landing-Page), de Adrian Gancarek
-- Fotografia din hero: *[de completat: sursa și licența fotografiei]*
+- Fotografia din hero: [Pexels – „A person in white coverall cleaning the black table”](https://www.pexels.com/photo/a-person-in-white-coverall-cleaning-the-black-table-4098322/), cu licența Pexels (gratuită, fără atribuire obligatorie). Am decupat-o pe orizontală și am comprimat-o pentru web.
 - Iconițe: [Lucide](https://lucide.dev)
 - Fonturi: Plus Jakarta Sans și Playfair Display (Google Fonts, prin `next/font`)
 - Logo-ul și favicon-ul: desenate în SVG pentru proiect
