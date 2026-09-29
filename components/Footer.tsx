@@ -101,7 +101,7 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <p className="mt-12 pt-6 border-t border-white/10 text-sm text-gray-400">
+                <p className="mt-12 pt-6 border-t border-white/10 text-sm text-gray-400 text-center">
                     © 2026 DeratPro. Toate drepturile rezervate.
                 </p>
             </div>

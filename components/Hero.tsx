@@ -1,10 +1,11 @@
 import Image from "next/image"
 import { contactInfo } from "@/data/date"
 import HeroClean from "./HeroClean"
+import HeroHint from "./HeroHint"
 
 export default function Hero() {
     return (
-        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-185px)] sm:min-h-[calc(100svh-177px)] lg:min-h-[calc(100svh-193px)] xl:min-h-[calc(100svh-225px)] flex items-center py-16 sm:py-20">
+        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-101px)] sm:min-h-[calc(100svh-121px)] lg:min-h-[calc(100svh-137px)] xl:min-h-[calc(100svh-145px)] flex items-center py-16 sm:py-20">
             {/* fotografia de fundal; decorativa, deci alt gol */}
             <Image
                 src="/hero-bg.jpg"
@@ -41,6 +42,8 @@ export default function Hero() {
                         Urgențe: {contactInfo.phoneDisplay}
                     </a>
                 </div>
+
+                <HeroHint />
             </div>
         </section>
     )
