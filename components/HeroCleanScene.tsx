@@ -122,21 +122,40 @@ function CleanPlane() {
 
     // mouse / deget: canvas-ul e sub text, asa ca ascultam pe window si verificam daca e peste hero
     useEffect(() => {
-        function onMove(e: PointerEvent) {
+        function addPoint(clientX: number, clientY: number) {
             const rect = gl.domElement.getBoundingClientRect()
-            const x = e.clientX - rect.left
-            const y = e.clientY - rect.top
+            const x = clientX - rect.left
+            const y = clientY - rect.top
             if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
                 last.current = null
                 return
             }
             pending.current.push({ x, y })
         }
-        window.addEventListener("pointermove", onMove)
-        window.addEventListener("pointerdown", onMove)
+        const onPointer = (e: PointerEvent) => {
+            if (e.pointerType === "mouse" || e.pointerType === "pen") addPoint(e.clientX, e.clientY)
+        }
+        // pe telefon, cand tragi cu degetul browserul deruleaza pagina si opreste evenimentele "pointer";
+        // evenimentele "touch" continua si in timpul derularii, deci le folosim pe ele pentru deget
+        const onTouch = (e: TouchEvent) => {
+            const touch = e.touches[0]
+            if (touch) addPoint(touch.clientX, touch.clientY)
+        }
+        const onTouchEnd = () => {
+            last.current = null
+        }
+
+        window.addEventListener("pointermove", onPointer)
+        window.addEventListener("pointerdown", onPointer)
+        window.addEventListener("touchstart", onTouch, { passive: true })
+        window.addEventListener("touchmove", onTouch, { passive: true })
+        window.addEventListener("touchend", onTouchEnd)
         return () => {
-            window.removeEventListener("pointermove", onMove)
-            window.removeEventListener("pointerdown", onMove)
+            window.removeEventListener("pointermove", onPointer)
+            window.removeEventListener("pointerdown", onPointer)
+            window.removeEventListener("touchstart", onTouch)
+            window.removeEventListener("touchmove", onTouch)
+            window.removeEventListener("touchend", onTouchEnd)
         }
     }, [gl])
 
@@ -164,7 +183,7 @@ function CleanPlane() {
 
         // desenam traseul mouse-ului ca linii albe, moi; pe ecrane mici buretele e proportional mai mic
         const k = canvas.width / size.width
-        const brush = Math.min(BRUSH_PX, size.width * 0.09)
+        const brush = Math.min(BRUSH_PX, size.width * 0.13)
         ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"
         ctx.lineCap = "round"
         ctx.lineJoin = "round"
