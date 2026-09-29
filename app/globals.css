@@ -22,6 +22,16 @@
   --color-typography-muted: #4A5B52;
 }
 
+/* aparitie lina (folosita de efectul din hero) */
+@theme {
+  --animate-fade-in: fade-in 1.2s ease-out both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
 /* fonturile vin din next/font, deci raman "inline" */
 @theme inline {
   --font-sans: var(--font-jakarta), sans-serif;

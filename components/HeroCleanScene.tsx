@@ -26,6 +26,8 @@ const fragmentShader = `
   uniform vec2 uOffset;
   uniform float uAspect;
   uniform float uTime;
+  uniform float uWide; // 1 = desktop (strat verde de la stanga la dreapta), 0 = telefon/tableta (de sus in jos)
+  uniform vec3 uForest; // verdele inchis al site-ului
   varying vec2 vUv;
 
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -79,11 +81,22 @@ const fragmentShader = `
     // varianta curata: culorile reale, putin mai luminoase
     vec3 clean = photo * 1.08;
 
-    float m = smoothstep(0.05, 0.7, texture2D(uMask, vUv).r);
+    float m = smoothstep(0.05, 0.6, texture2D(uMask, vUv).r);
     vec3 color = mix(dirty, clean, m);
 
     // o dunga luminoasa discreta pe marginea zonei curatate, ca un luciu
     color += m * (1.0 - m) * 0.35;
+
+    // stratul verde peste poza (ca textul alb sa se citeasca), calculat aici, nu in HTML,
+    // ca sa se poata deschide pe unde stergi:
+    // desktop: plin in stanga (sub text), tot mai transparent spre dreapta
+    // telefon: mai inchis sus (sub titlu), mai transparent jos
+    float wide = mix(1.0, 0.85, smoothstep(0.0, 0.5, vUv.x)) - smoothstep(0.5, 1.0, vUv.x) * 0.55;
+    float tall = mix(0.45, 0.85, smoothstep(0.0, 1.0, vUv.y));
+    float overlay = mix(tall, wide, uWide);
+    // pe unde s-a sters, stratul verde se subtiaza, ca poza curatata sa se vada si sub text
+    overlay *= 1.0 - m * 0.5;
+    color = mix(color, uForest, overlay);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -143,6 +156,9 @@ function CleanPlane() {
         uOffset: { value: new THREE.Vector2(0, 0) },
         uAspect: { value: 1 },
         uTime: { value: 0 },
+        uWide: { value: 1 },
+        // #0F2318 ca valori brute 0..1 (canvas-ul lucreaza fara conversii de culoare)
+        uForest: { value: new THREE.Vector3(15 / 255, 35 / 255, 24 / 255) },
     }))
 
     const materialRef = useRef<THREE.ShaderMaterial>(null)
@@ -208,6 +224,8 @@ function CleanPlane() {
         const canvasAspect = size.width / size.height
         const u = material.uniforms
         u.uAspect.value = canvasAspect
+        // acelasi prag ca "lg:" din Tailwind (1024px), unde si textul trece pe partea stanga
+        u.uWide.value = window.innerWidth >= 1024 ? 1 : 0
         if (canvasAspect > PHOTO_ASPECT) {
             // hero mai lat decat poza: taiem sus/jos, pastrand zona de la ~35% de sus
             u.uScale.value.set(1, PHOTO_ASPECT / canvasAspect)
@@ -283,7 +301,8 @@ function CleanPlane() {
         // desenam traseul mouse-ului ca linii albe, moi; pe ecrane mici buretele e proportional mai mic
         const k = canvas.width / size.width
         const brush = Math.min(BRUSH_PX, size.width * 0.13)
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"
+        // aproape opac: o singura trecere curata complet zona
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.9)"
         ctx.lineCap = "round"
         ctx.lineJoin = "round"
         ctx.lineWidth = brush * 2 * k

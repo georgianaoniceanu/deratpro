@@ -46,7 +46,7 @@ export default function Contact(){
     }
     // clasele unui camp: contur rosu cand are eroare, mustar la focus altfel
     const fieldClass = (field: keyof Form) =>
-        `w-full rounded-xl border bg-white dark:bg-forest-deep px-4 py-3.5 text-base outline-none transition placeholder:text-typography-muted/60 focus:ring-2 ${
+        `w-full rounded-xl border bg-white dark:bg-forest-deep px-4 py-3.5 text-base outline-none transition placeholder:text-typography-muted/80 focus:ring-2 ${
             error[field]
                 ? "border-red-600 focus:border-red-600 focus:ring-red-600/20"
                 : "border-sand-dark focus:border-mustard focus:ring-mustard/30"
@@ -57,7 +57,8 @@ export default function Contact(){
             <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                 <div>
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-6">
-                        Suntem aici să te <span className="font-serif font-semibold italic text-mustard">ajutăm</span>
+                        {/* pe fundal deschis, mustarul e prea slab ca contrast; folosim un auriu mai inchis */}
+                        Suntem aici să te <span className="font-serif font-semibold italic text-[#9A6410] dark:text-mustard">ajutăm</span>
                     </h2>
                     <p className="text-lg text-typography-muted leading-relaxed max-w-md mb-12 lg:mb-20">
                         Scapă de dăunători rapid și în deplină siguranță. Contactează echipa DeratPro pentru o estimare gratuită și programare imediată.

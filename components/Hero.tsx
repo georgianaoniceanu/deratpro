@@ -15,10 +15,11 @@ export default function Hero() {
                 sizes="100vw"
                 className="object-cover object-[right_35%]"
             />
-            {/* animatia three.js: poza apare stearsa si se "curata" pe unde trece mouse-ul */}
-            <HeroClean />
-            {/* strat verde peste poza, ca textul alb sa se citeasca: pe telefon mai inchis sus (sub titlu), pe desktop mai inchis in stanga */}
+            {/* strat verde peste poza, ca textul alb sa se citeasca (pe telefon mai inchis sus, pe desktop in stanga).
+                se vede doar pana porneste animatia; apoi shader-ul deseneaza singur acelasi strat, peste el */}
             <div className="absolute inset-0 bg-linear-to-b from-forest/85 via-forest/70 to-forest/45 lg:bg-linear-to-r lg:from-forest lg:via-forest/85 lg:to-forest/30" aria-hidden="true" />
+            {/* animatia three.js: poza apare murdara si se "curata" pe unde trece mouse-ul */}
+            <HeroClean />
 
             <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] mb-6 text-balance">
