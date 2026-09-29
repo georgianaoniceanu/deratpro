@@ -1,6 +1,6 @@
 import { Clock, ShieldCheck, UserCheck, BadgeCheck } from "lucide-react"
 import type { CSSProperties } from "react"
-import { advantages } from "../data/date"
+import { advantages, certifications } from "../data/date"
 import Stats from "./Stats"
 
 // iconita pentru fiecare avantaj, in aceeasi ordine ca in date.ts
@@ -30,6 +30,19 @@ export default function WhyUs(){
                 </ul>
 
                 <Stats></Stats>
+
+                {/* autorizatiile firmei, ca insigne mici sub statistici */}
+                <ul data-reveal className="mt-10 flex flex-wrap justify-center sm:justify-start gap-3" aria-label="Autorizații și certificări">
+                    {certifications.map(c => (
+                        <li
+                            key={c}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-sand-dark bg-white dark:bg-forest-surface text-base font-semibold text-forest dark:text-gray-100"
+                        >
+                            <BadgeCheck size={18} className="text-[#9A6410] dark:text-mustard" aria-hidden="true" />
+                            {c}
+                        </li>
+                    ))}
+                </ul>
             </div>
         </section>
     )

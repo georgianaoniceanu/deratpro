@@ -25,10 +25,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ro" className={`${jakarta.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
-        {/* aplica tema salvata (sau cea a sistemului) inainte sa apara pagina, ca sa nu "clipeasca" din alb in negru */}
+        {/* ruleaza inainte sa apara pagina:
+            1. aplica tema salvata (sau cea a sistemului), ca sa nu "clipeasca" din alb in negru
+            2. la refresh, pagina porneste mereu de sus: browserul nu mai tine minte pozitia,
+               iar ancora din adresa (ex. #contact, pusa de linkurile din meniu) e scoasa */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`,
+            __html: `document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}if("scrollRestoration" in history)history.scrollRestoration="manual";if(location.hash)history.replaceState(null,"",location.pathname+location.search);addEventListener("load",function(){scrollTo(0,0)});`,
           }}
         />
       </head>

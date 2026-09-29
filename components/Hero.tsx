@@ -26,7 +26,7 @@ export default function Hero() {
                     Cu DeratPro, spațiile tale rămân <span className="font-serif italic text-mustard">curate</span>
                 </h1>
                 <p className="text-lg lg:text-xl text-gray-300 leading-relaxed max-w-2xl mb-9">
-                    Servicii complete de deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale. Intervenții rapide, sigure și garantate.
+                    Servicii complete de deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale din {contactInfo.area}. Intervenții rapide, sigure și garantate.
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
                     <a

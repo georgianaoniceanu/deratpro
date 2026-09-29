@@ -6,6 +6,8 @@ export type NavLink = {
 export type Service = {
   title: string
   description: string
+  targets: string[] // ce tratam
+  places: string[] // unde intervenim
 }
 
 export type Advantage = {
@@ -28,6 +30,7 @@ export type ContactInfo = {
   phoneHref: string
   email: string
   schedule: string
+  area: string
 }
 
 export const navLinks: NavLink[] = [
@@ -41,14 +44,20 @@ export const services: Service[] = [
   {
     title: 'Deratizare',
     description: 'Eliminăm șoarecii și șobolanii cu stații de momire sigure și monitorizate.',
+    targets: ['șoareci', 'șobolani', 'cârtițe'],
+    places: ['case', 'blocuri', 'depozite', 'restaurante'],
   },
   {
     title: 'Dezinsecție',
     description: 'Scăpăm locuința sau afacerea de gândaci, ploșnițe, furnici și alte insecte.',
+    targets: ['gândaci', 'ploșnițe', 'purici', 'viespi'],
+    places: ['apartamente', 'hoteluri', 'restaurante', 'birouri'],
   },
   {
     title: 'Dezinfecție',
     description: 'Igienizăm suprafețele și aerul, eliminând bacteriile, virusurile și mucegaiul.',
+    targets: ['bacterii', 'virusuri', 'mucegai'],
+    places: ['clinici', 'școli', 'birouri', 'spații comerciale'],
   },
 ]
 
@@ -97,4 +106,13 @@ export const contactInfo: ContactInfo = {
   phoneHref: 'tel:0720000000',
   email: 'contact@deratpro.ro',
   schedule: 'Luni–Vineri 07:00–22:00, Sâmbătă–Duminică 08:00–20:00',
+  area: 'București și Ilfov',
 }
+
+// autorizatiile firmei, afisate sub statistici (client fictiv)
+export const certifications: string[] = [
+  'Autorizat DSP',
+  'Biocide avizate CNPB',
+  'Personal cu atestat DDD',
+  'Certificat ISO 9001',
+]

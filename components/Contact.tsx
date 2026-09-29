@@ -1,5 +1,5 @@
 "use client"
-import { Phone, Mail, Clock } from "lucide-react"
+import { Phone, Mail, Clock, MapPin } from "lucide-react"
 import {contactInfo} from "../data/date"
 import { useState } from "react"
 import type { ChangeEvent, CSSProperties, SubmitEvent } from "react"
@@ -97,6 +97,16 @@ export default function Contact(){
                                 <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Program de lucru</p>
                                 <p className="text-lg font-medium text-forest dark:text-gray-200">{contactInfo.schedule}</p>
                                 <p className="text-lg font-bold text-forest dark:text-white mt-1">Intervenții de urgență non-stop</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-5">
+                            <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
+                                <MapPin size={24} aria-hidden="true" />
+                            </div>
+                            <div>
+                                <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Zonă deservită</p>
+                                <p className="text-lg font-semibold text-forest dark:text-white">{contactInfo.area}</p>
                             </div>
                         </div>
                     </address>

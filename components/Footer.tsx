@@ -42,7 +42,7 @@ export default function Footer() {
                             </span>
                         </a>
                         <p className="mt-4 text-base text-gray-300 leading-relaxed max-w-xs">
-                            Deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale.
+                            Deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale din {contactInfo.area}.
                         </p>
                     </div>
 
