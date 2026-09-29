@@ -9,8 +9,8 @@ const PHOTO_ASPECT = 2400 / 2053
 const BRUSH_PX = 70 // raza "buretelui" in pixeli de ecran
 const IDLE_AFTER = 9 // secunde fara stergere dupa care masca e sigur complet murdara si ne oprim din desenat
 const MAX_STAMPS = 512 // cate "stampile" de burete desenam maxim intr-un cadru
-const AUTO_EVERY = 7 // pe telefon: o stergere automata la fiecare 7 secunde
-const SWEEP_SECONDS = 2.2 // cat dureaza o stergere automata pe telefon
+const AUTO_EVERY = 9 // pe telefon: o stergere automata la fiecare 9 secunde
+const SWEEP_SECONDS = 3.2 // cat dureaza o stergere automata pe telefon (miscare lenta, de sus in jos)
 
 // un dreptunghi care acopera tot canvas-ul, fara camera
 const vertexShader = `
@@ -245,6 +245,7 @@ function CleanPlane() {
     const last = useRef<{ x: number; y: number } | null>(null)
     const start = useRef<number | null>(null)
     const sweeping = useRef(false) // daca in cadrul anterior rula o stergere automata
+    const sweepY = useRef<number | null>(null) // pe telefon: unde a ajuns banda de stergere in cadrul anterior
     const sparkPoints = useRef<THREE.Points>(null)
     const sparks = useRef<SparkData | null>(null)
     const [sparkUniforms] = useState(() => ({ uPixelRatio: { value: 1 } }))
@@ -455,39 +456,60 @@ function CleanPlane() {
         const t = state.clock.elapsedTime
         if (start.current === null) start.current = t
 
-        // stergerea automata:
-        // - pe calculator, o singura data la incarcare, ca vizitatorul sa vada efectul
-        // - pe telefon, se repeta la cateva secunde, cand dintr-o parte, cand din cealalta
+        // stampilele de burete pentru cadrul curent (in coordonate de ecran -1..1)
+        const brush = Math.min(BRUSH_PX, size.width * 0.13)
+        let stamps = 0
+        const addStamp = (x: number, y: number) => {
+            if (stamps >= MAX_STAMPS) return
+            mask.stampPositions[stamps * 3] = (x / size.width) * 2 - 1
+            mask.stampPositions[stamps * 3 + 1] = 1 - (y / size.height) * 2
+            stamps++
+        }
+
+        // stergerea automata
         const elapsed = t - start.current
-        const sweepTime = coarse ? elapsed % AUTO_EVERY : elapsed
-        const sweepIndex = coarse ? Math.floor(elapsed / AUTO_EVERY) : 0
-        const progress = sweepTime / (coarse ? SWEEP_SECONDS : 1.8)
-        const introRunning = !reduceMotion && progress <= 1
-        if (introRunning) {
-            if (!sweeping.current) last.current = null // nu legam noua stergere de capatul celei vechi
-            const fromLeft = sweepIndex % 2 === 0
-            const x = coarse
-                ? size.width * (fromLeft ? 0.3 + 0.65 * progress : 0.95 - 0.65 * progress)
-                : size.width * (0.5 + 0.45 * progress)
-            const y = size.height * (0.72 - 0.45 * progress + Math.sin(progress * Math.PI * 3) * 0.08)
-            pending.current.push({ x, y })
+        let introRunning = false
+        if (!reduceMotion && coarse) {
+            // telefon: ca o racleta pe geam, o banda lata cat toata poza coboara lent de sus in jos
+            // si curata toata imaginea; apoi murdaria revine treptat si ciclul se reia
+            const progress = (elapsed % AUTO_EVERY) / SWEEP_SECONDS
+            if (progress <= 1) {
+                introRunning = true
+                const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2 // lent-rapid-lent
+                const y = -brush + (size.height + 2 * brush) * eased
+                // umplem tot ce a parcurs banda de la cadrul trecut, ca sa nu ramana dungi murdare
+                const fromY = sweepY.current ?? y
+                const rowStep = brush * 0.5
+                for (let rowY = fromY; rowY <= y; rowY += rowStep) {
+                    for (let x = -brush * 0.5; x <= size.width + brush * 0.5; x += brush * 0.6) addStamp(x, rowY)
+                }
+                for (let x = -brush * 0.5; x <= size.width + brush * 0.5; x += brush * 0.6) addStamp(x, y)
+                sweepY.current = y
+                mask.lastWipe = t
+            } else {
+                sweepY.current = null
+            }
+        } else if (!reduceMotion) {
+            // calculator: o singura stergere la incarcare, pe partea dreapta, ca vizitatorul sa vada efectul
+            const progress = elapsed / 1.8
+            if (progress <= 1) {
+                introRunning = true
+                if (!sweeping.current) last.current = null // nu legam stergerea de o pozitie veche a mouse-ului
+                const x = size.width * (0.5 + 0.45 * progress)
+                const y = size.height * (0.72 - 0.45 * progress + Math.sin(progress * Math.PI * 3) * 0.08)
+                pending.current.push({ x, y })
+            }
         }
         sweeping.current = introRunning
 
-        // pregatim stampilele de burete pentru punctele noi (in coordonate de ecran -1..1)
-        const brush = Math.min(BRUSH_PX, size.width * 0.13)
+        // traseul mouse-ului: stampile dese intre punctul anterior si cel nou
         const sp = sparks.current
-        let stamps = 0
         for (const p of pending.current) {
             const from = last.current ?? p
             const dist = Math.hypot(p.x - from.x, p.y - from.y)
             const steps = Math.max(1, Math.ceil(dist / (brush * 0.35)))
-            for (let s = 1; s <= steps && stamps < MAX_STAMPS; s++) {
-                const x = from.x + ((p.x - from.x) * s) / steps
-                const y = from.y + ((p.y - from.y) * s) / steps
-                mask.stampPositions[stamps * 3] = (x / size.width) * 2 - 1
-                mask.stampPositions[stamps * 3 + 1] = 1 - (y / size.height) * 2
-                stamps++
+            for (let s = 1; s <= steps; s++) {
+                addStamp(from.x + ((p.x - from.x) * s) / steps, from.y + ((p.y - from.y) * s) / steps)
             }
             mask.lastWipe = t
 
@@ -522,8 +544,8 @@ function CleanPlane() {
             renderer.autoClear = false // desenam peste masca existenta, nu o stergem
             renderer.setRenderTarget(mask.target)
             if (fadeNow) {
-                // pe telefon murdaria revine mai repede, ca fiecare stergere automata sa se vada pe o poza murdara
-                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : coarse ? 0.05 : 0.024
+                // pe telefon murdaria revine ceva mai repede, ca fiecare stergere automata sa inceapa pe o poza murdara
+                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : coarse ? 0.035 : 0.024
                 renderer.render(mask.fadeScene, mask.camera)
             }
             if (stamps > 0) {
