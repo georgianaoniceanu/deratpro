@@ -7,11 +7,12 @@ export default function HowItWorks(){
                     Cum decurge intervenția
                 </h2>
 
-                <ul className="relative grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12">
+                <div className="relative">
                     {/* linia care leaga cercurile: verticala pe mobil, orizontala pe desktop */}
                     <div className="absolute left-8 top-8 bottom-8 w-0.5 bg-sand-dark lg:hidden" aria-hidden="true" />
                     <div className="hidden lg:block absolute top-12 left-[16.66%] right-[16.66%] h-0.5 bg-sand-dark" aria-hidden="true" />
 
+                <ul className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12">
                     {steps.map((s, i) => (
                         <li key={s.title} className="relative flex items-start gap-6 lg:flex-col lg:items-center lg:text-center">
                             <div className="relative z-10 shrink-0 w-16 h-16 lg:w-24 lg:h-24 rounded-full bg-forest text-mustard font-bold text-lg lg:text-xl flex items-center justify-center shadow-md">
@@ -24,6 +25,7 @@ export default function HowItWorks(){
                         </li>
                     ))}
                 </ul>
+                </div>
             </div>
         </section>
     )

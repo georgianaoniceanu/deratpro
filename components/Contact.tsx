@@ -1,4 +1,5 @@
 "use client"
+import { Phone, Mail, Clock } from "lucide-react"
 import {contactInfo} from "../data/date"
 import { useState } from "react"
 import { ChangeEvent, SubmitEvent } from "react"
@@ -43,49 +44,110 @@ export default function Contact(){
         setSent(true)
         setForm({nume: "", telefon: "", mesaj: ""})
     }
+    // clasele unui camp: contur rosu cand are eroare, mustar la focus altfel
+    const fieldClass = (field: keyof Form) =>
+        `w-full rounded-xl border bg-white px-4 py-3.5 text-base outline-none transition placeholder:text-typography-muted/60 focus:ring-2 ${
+            error[field]
+                ? "border-red-600 focus:border-red-600 focus:ring-red-600/20"
+                : "border-sand-dark focus:border-mustard focus:ring-mustard/30"
+        }`
+
     return(
-        <section id="contact">
-            <div>
-                <h2>Suntem aici să te ajutăm</h2>
-                <p>Scapă de dăunători rapid și în deplină siguranță. Contactează-ne pentru o estimare gratuită.</p>
+        <section id="contact" className="bg-sand py-20 lg:py-28">
+            <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+                <div>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest text-balance mb-6">
+                        Suntem aici să te <span className="font-serif font-semibold italic">ajutăm</span>
+                    </h2>
+                    <p className="text-lg text-typography-muted leading-relaxed max-w-md mb-10">
+                        Scapă de dăunători rapid și în deplină siguranță. Contactează-ne pentru o estimare gratuită.
+                    </p>
 
-                <address>
-                    <p>Telefon urgențe</p>
-                    <a href={contactInfo.phoneHref}>{contactInfo.phoneDisplay}</a>
+                    <address className="not-italic space-y-6">
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 shrink-0 rounded-xl bg-forest text-mustard flex items-center justify-center">
+                                <Phone size={20} aria-hidden="true" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Telefon urgențe</p>
+                                <a href={contactInfo.phoneHref} className="text-2xl font-extrabold text-forest hover:text-mustard-hover transition-colors">
+                                    {contactInfo.phoneDisplay}
+                                </a>
+                            </div>
+                        </div>
 
-                    <p>Email</p>
-                    <a href={`mailto:${contactInfo.email}`}>{contactInfo.email}</a>
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 shrink-0 rounded-xl bg-forest text-mustard flex items-center justify-center">
+                                <Mail size={20} aria-hidden="true" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Email</p>
+                                <a href={`mailto:${contactInfo.email}`} className="text-lg font-semibold text-forest hover:text-mustard-hover transition-colors">
+                                    {contactInfo.email}
+                                </a>
+                            </div>
+                        </div>
 
-                    <p>Program</p>
-                    <p>{contactInfo.schedule}</p>
-                </address>
-            </div>
-            <form noValidate onSubmit={handleSubmit}>
-                <h3>Solicită intervenție</h3>
-                <p>Completează datele de mai jos și un specialist te va contacta în cel mai scurt timp.</p>
-                <label htmlFor="nume">Nume și prenume</label>
-                <input name="nume" value={form.nume} onChange={handleChange} type="text" id="nume" placeholder="Ex: Alexandru Popescu" autoComplete="name"
-                    aria-invalid={error.nume ? true : undefined}
-                    aria-describedby={error.nume ? "nume-error" : undefined}/>
-                {error.nume && <p id="nume-error">{error.nume}</p>}
-
-                <label htmlFor="tel">Număr de telefon</label>
-                <input name="telefon" value={form.telefon} onChange={handleChange} type="tel" id="tel" placeholder="Ex: 0720 000 000" autoComplete="tel"
-                    aria-invalid={error.telefon ? true : undefined}
-                    aria-describedby={error.telefon ? "telefon-error" : undefined}/>
-                {error.telefon && <p id="telefon-error">{error.telefon}</p>}
-
-                <label htmlFor="mesaj">Mesaj / Detalii problemă</label>
-                <textarea name="mesaj" value={form.mesaj} onChange={handleChange} rows={4} id="mesaj" placeholder="Descrie pe scurt tipul dăunătorilor și suprafața aproximativă..."
-                    aria-invalid={error.mesaj ? true : undefined}
-                    aria-describedby={error.mesaj ? "mesaj-error" : undefined}/>
-                {error.mesaj && <p id="mesaj-error">{error.mesaj}</p>}
-                <button type="submit">Trimite cererea</button>
-
-                <div aria-live="polite">
-                    {sent && <p>Mulțumim! Am primit cererea ta și te sunăm în cel mai scurt timp.</p>}
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 shrink-0 rounded-xl bg-forest text-mustard flex items-center justify-center">
+                                <Clock size={20} aria-hidden="true" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold uppercase tracking-wider text-typography-muted">Program</p>
+                                <p className="text-base font-medium text-forest">{contactInfo.schedule}</p>
+                            </div>
+                        </div>
+                    </address>
                 </div>
-            </form>
+
+                <div className="bg-white rounded-3xl p-6 sm:p-10 border border-sand-dark shadow-lg">
+                    <h3 className="text-2xl font-bold mb-2">Solicită intervenție</h3>
+                    <p className="text-base text-typography-muted mb-8">
+                        Completează datele de mai jos și un specialist te va contacta în cel mai scurt timp.
+                    </p>
+
+                    <form noValidate onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label htmlFor="nume" className="block text-base font-bold mb-2">Nume și prenume</label>
+                            <input name="nume" value={form.nume} onChange={handleChange} type="text" id="nume" placeholder="Ex: Alexandru Popescu" autoComplete="name"
+                                aria-invalid={error.nume ? true : undefined}
+                                aria-describedby={error.nume ? "nume-error" : undefined}
+                                className={fieldClass("nume")}/>
+                            {error.nume && <p id="nume-error" className="mt-2 text-sm font-medium text-red-700">{error.nume}</p>}
+                        </div>
+
+                        <div>
+                            <label htmlFor="tel" className="block text-base font-bold mb-2">Număr de telefon</label>
+                            <input name="telefon" value={form.telefon} onChange={handleChange} type="tel" id="tel" placeholder="Ex: 0720 000 000" autoComplete="tel"
+                                aria-invalid={error.telefon ? true : undefined}
+                                aria-describedby={error.telefon ? "telefon-error" : undefined}
+                                className={fieldClass("telefon")}/>
+                            {error.telefon && <p id="telefon-error" className="mt-2 text-sm font-medium text-red-700">{error.telefon}</p>}
+                        </div>
+
+                        <div>
+                            <label htmlFor="mesaj" className="block text-base font-bold mb-2">Mesaj / Detalii problemă</label>
+                            <textarea name="mesaj" value={form.mesaj} onChange={handleChange} rows={4} id="mesaj" placeholder="Descrie pe scurt tipul dăunătorilor și suprafața aproximativă..."
+                                aria-invalid={error.mesaj ? true : undefined}
+                                aria-describedby={error.mesaj ? "mesaj-error" : undefined}
+                                className={`${fieldClass("mesaj")} resize-none`}/>
+                            {error.mesaj && <p id="mesaj-error" className="mt-2 text-sm font-medium text-red-700">{error.mesaj}</p>}
+                        </div>
+
+                        <button type="submit" className="w-full py-4 bg-mustard hover:bg-mustard-hover text-forest font-bold rounded-xl transition hover:-translate-y-0.5">
+                            Trimite cererea
+                        </button>
+
+                        <div aria-live="polite">
+                            {sent && (
+                                <p className="rounded-xl bg-forest/5 px-4 py-3 text-base font-medium text-forest">
+                                    Mulțumim! Am primit cererea ta și te sunăm în cel mai scurt timp.
+                                </p>
+                            )}
+                        </div>
+                    </form>
+                </div>
+            </div>
         </section>
     )
 }
