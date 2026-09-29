@@ -24,6 +24,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ro" className={`${jakarta.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <head>
+        {/* aplica tema salvata (sau cea a sistemului) inainte sa apara pagina, ca sa nu "clipeasca" din alb in negru */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`,
+          }}
+        />
+      </head>
       {/* extensiile de browser adauga uneori atribute pe html/body inainte de React */}
       <body suppressHydrationWarning>{children}</body>
     </html>

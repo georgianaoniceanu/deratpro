@@ -17,7 +17,7 @@ export default function Home() {
       <div className="relative z-10 px-4 pb-4 pt-24 sm:p-12 sm:pt-20 lg:p-24 xl:p-32">
         <div
           data-site
-          className="mx-auto max-w-[1440px] overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/15 ring-1 ring-black/5"
+          className="mx-auto max-w-[1440px] overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/15 ring-1 ring-black/5 dark:ring-white/10"
         >
           <Navbar />
           <main>

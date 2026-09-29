@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Menu, X, ChevronRight, Phone } from "lucide-react"
 import { navLinks, contactInfo } from "../data/date"
+import ThemeToggle from "./ThemeToggle"
 
 export default function Navbar() {
     const [openMenu, setOpenMenu] = useState(false)
@@ -51,22 +52,19 @@ export default function Navbar() {
                     ))}
                 </nav>
 
-                <a
-                    href="#contact"
-                    className="hidden lg:inline-flex px-6 py-3 bg-mustard hover:bg-mustard-hover text-forest font-bold rounded-xl transition hover:-translate-y-0.5 shadow-lg shadow-mustard/20"
-                >
-                    Ofertă gratuită
-                </a>
+                <div className="flex items-center gap-3">
+                    <ThemeToggle />
 
-                <button
-                    onClick={() => setOpenMenu(!openMenu)}
-                    aria-expanded={openMenu}
-                    aria-controls="mobile-menu"
-                    aria-label={openMenu ? "Închide meniul" : "Deschide meniul"}
-                    className="lg:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-forest-surface border border-white/15 text-white hover:text-mustard hover:border-mustard/40 transition-colors"
-                >
-                    <Menu size={24} aria-hidden="true" />
-                </button>
+                    <button
+                        onClick={() => setOpenMenu(!openMenu)}
+                        aria-expanded={openMenu}
+                        aria-controls="mobile-menu"
+                        aria-label={openMenu ? "Închide meniul" : "Deschide meniul"}
+                        className="lg:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-forest-surface border border-white/15 text-white hover:text-mustard hover:border-mustard/40 transition-colors"
+                    >
+                        <Menu size={24} aria-hidden="true" />
+                    </button>
+                </div>
             </div>
 
             {openMenu && (

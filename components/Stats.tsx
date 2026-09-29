@@ -7,7 +7,7 @@ export default function Stats(){
                 <li
                     key={d.label}
                     // card separat, verde inchis, cu o lumina discreta in coltul din dreapta sus
-                    className="rounded-2xl p-8 lg:p-10 text-white shadow-lg bg-forest bg-[radial-gradient(circle_at_100%_0%,rgba(229,169,60,0.14),transparent_60%)]"
+                    className="rounded-2xl p-8 lg:p-10 text-white shadow-lg bg-forest dark:bg-forest-surface dark:ring-1 dark:ring-white/10 bg-[radial-gradient(circle_at_100%_0%,rgba(229,169,60,0.14),transparent_60%)]"
                 >
                     <p className="text-5xl lg:text-6xl font-extrabold tracking-tight text-mustard mb-2">
                         <CountUp value={d.value} />

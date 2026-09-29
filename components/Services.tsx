@@ -8,7 +8,7 @@ export default function Services(){
     return(
         <section id="servicii" className="bg-sand-light py-20 lg:py-28 border-b border-sand-dark">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest text-balance">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance">
                     Serviciile noastre
                 </h2>
                 <p className="mt-3 text-lg text-typography-muted leading-relaxed max-w-2xl">
@@ -19,8 +19,8 @@ export default function Services(){
                     {services.map((s, i) => {
                         const Icon = icons[i]
                         return (
-                            <li key={s.title} className="h-full bg-white rounded-2xl p-8 lg:p-9 border border-sand-dark shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-16 h-16 rounded-2xl bg-sand flex items-center justify-center text-forest mb-8">
+                            <li key={s.title} className="h-full bg-white dark:bg-forest-surface rounded-2xl p-8 lg:p-9 border border-sand-dark shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-16 h-16 rounded-2xl bg-sand dark:bg-white/5 flex items-center justify-center text-forest dark:text-mustard mb-8">
                                     <Icon size={32} aria-hidden="true" />
                                 </div>
                                 <h3 className="text-2xl font-bold mb-4">{s.title}</h3>

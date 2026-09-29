@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
-@theme inline {
+/* dark mode activat de clasa "dark" pe <html> (pusa de butonul din navbar) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* culorile sunt variabile CSS, ca modul intunecat sa le poata inlocui mai jos */
+@theme {
   --color-forest: #0F2318;
   --color-forest-surface: #152E20;
   --color-forest-deep: #091710;
@@ -15,9 +19,22 @@
 
   --color-typography: #122B1E;
   --color-typography-muted: #4A5B52;
+}
 
+/* fonturile vin din next/font, deci raman "inline" */
+@theme inline {
   --font-sans: var(--font-jakarta), sans-serif;
   --font-serif: var(--font-playfair), serif;
+}
+
+/* modul intunecat: fundalurile crem devin verzi foarte inchise, iar textul devine deschis */
+.dark {
+  --color-sand: #10241A;
+  --color-sand-light: #0C1D14;
+  --color-sand-dark: #1F3A2B;
+
+  --color-typography: #E8ECE9;
+  --color-typography-muted: #A3B1A8;
 }
 
 @layer base {
@@ -26,7 +43,7 @@
   }
 
   body {
-    @apply bg-white text-typography font-sans antialiased;
+    @apply bg-white dark:bg-forest-deep text-typography font-sans antialiased transition-colors;
   }
 }
 
