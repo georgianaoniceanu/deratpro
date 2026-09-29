@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { contactInfo } from "@/data/date"
+import HeroClean from "./HeroClean"
 
 export default function Hero() {
     return (
@@ -13,8 +14,10 @@ export default function Hero() {
                 sizes="100vw"
                 className="object-cover object-[right_35%]"
             />
+            {/* animatia three.js: poza apare stearsa si se "curata" pe unde trece mouse-ul */}
+            <HeroClean />
             {/* strat verde peste poza, ca textul alb sa se citeasca: plin pe telefon, gradient pe desktop */}
-            <div className="absolute inset-0 bg-forest/85 lg:bg-transparent lg:bg-linear-to-r lg:from-forest lg:via-forest/85 lg:to-forest/30" aria-hidden="true" />
+            <div className="absolute inset-0 bg-forest/75 lg:bg-transparent lg:bg-linear-to-r lg:from-forest lg:via-forest/85 lg:to-forest/30" aria-hidden="true" />
 
             <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] mb-6 text-balance">
