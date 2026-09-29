@@ -34,11 +34,11 @@ export default function Contact(){
                 <h3>Solicită intervenție</h3>
                 <p>Completează datele de mai jos și un specialist te va contacta în cel mai scurt timp.</p>
                 <label htmlFor="nume">Nume și prenume</label>
-                <input name="nume" value={form.nume} onChange={} type="text" id="nume" placeholder="Ex: Alexandru Popescu" autoComplete="name"/>
+                <input name="nume" value={form.nume} onChange={handleChange} type="text" id="nume" placeholder="Ex: Alexandru Popescu" autoComplete="name"/>
                 <label htmlFor="tel">Număr de telefon</label>
-                <input name="telefon" value={form.telefon} type="tel" id="tel" placeholder="Ex: 0720 000 000" autoComplete="tel"/>
+                <input name="telefon" value={form.telefon} onChange={handleChange} type="tel" id="tel" placeholder="Ex: 0720 000 000" autoComplete="tel"/>
                 <label htmlFor="mesaj">Mesaj / Detalii problemă</label>
-                <textarea name="mesaj" value={form.mesaj} rows={4} id="mesaj" placeholder="Descrie pe scurt tipul dăunătorilor și suprafața aproximativă..."/>
+                <textarea name="mesaj" value={form.mesaj} onChange={handleChange} rows={4} id="mesaj" placeholder="Descrie pe scurt tipul dăunătorilor și suprafața aproximativă..."/>
                 <button type="submit">Trimite cererea</button>
             </form>
         </section>
