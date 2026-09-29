@@ -1,7 +1,7 @@
 import { steps } from "../data/date"
 export default function HowItWorks(){
     return(
-        <section id="cum-functioneaza" className="bg-sand-light py-20 lg:py-28 border-b border-sand-dark">
+        <section id="cum-functioneaza" className="bg-sand py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-12 lg:mb-16">
                     Cum decurge intervenția

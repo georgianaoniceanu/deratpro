@@ -53,7 +53,7 @@ export default function Contact(){
         }`
 
     return(
-        <section id="contact" className="bg-sand py-20 lg:py-28">
+        <section id="contact" className="bg-sand-light py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                 <div>
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left mb-6">
@@ -101,7 +101,7 @@ export default function Contact(){
                     </address>
                 </div>
 
-                <div className="bg-white dark:bg-forest-surface rounded-3xl p-6 sm:p-10 border border-sand-dark shadow-lg">
+                <div className="bg-sand dark:bg-forest-surface rounded-3xl p-6 sm:p-10 border border-sand-dark shadow-lg">
                     <h3 className="text-2xl font-bold mb-2">Solicită intervenție</h3>
                     <p className="text-base text-typography-muted mb-8">
                         Completează datele de mai jos și un specialist te va contacta în cel mai scurt timp.

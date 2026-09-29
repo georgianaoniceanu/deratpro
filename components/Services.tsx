@@ -6,7 +6,7 @@ const icons = [Rat, Bug, SprayCan]
 
 export default function Services(){
     return(
-        <section id="servicii" className="bg-sand-light py-20 lg:py-28 border-b border-sand-dark">
+        <section id="servicii" className="bg-sand py-20 lg:py-28">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-forest dark:text-white text-balance text-center sm:text-left">
                     Serviciile noastre

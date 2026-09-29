@@ -9,9 +9,10 @@
   --color-forest-surface: #152E20;
   --color-forest-deep: #091710;
 
-  --color-sand: #F5F2EB;
-  --color-sand-light: #FBF9F5;
-  --color-sand-dark: #ECE7DD;
+  /* doua tonuri clar diferite pentru secțiuni (alternează) + margini vizibile */
+  --color-sand: #F2ECDF;
+  --color-sand-light: #FDFBF7;
+  --color-sand-dark: #E3DAC8;
 
   --color-mustard: #E5A93C;
   --color-mustard-hover: #D99B26;
@@ -43,7 +44,8 @@
   }
 
   body {
-    @apply bg-white dark:bg-forest-deep text-typography font-sans antialiased transition-colors;
+    /* fundalul din jurul site-ului e mai inchis decat secțiunile, ca in dark mode, ca sa iasa cardul in evidenta */
+    @apply bg-[#E1D9C8] dark:bg-forest-deep text-typography font-sans antialiased transition-colors;
   }
 }
 
