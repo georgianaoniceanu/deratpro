@@ -8,9 +8,121 @@ import * as THREE from "three"
 const PHOTO_ASPECT = 2400 / 2053
 const BRUSH_PX = 70 // raza "buretelui" in pixeli de ecran
 const IDLE_AFTER = 9 // secunde fara stergere dupa care masca e sigur complet murdara si ne oprim din desenat
-const MAX_STAMPS = 512 // cate "stampile" de burete desenam maxim intr-un cadru
-const AUTO_EVERY = 9 // pe telefon: o stergere automata la fiecare 9 secunde
-const SWEEP_SECONDS = 3.2 // cat dureaza o stergere automata pe telefon (miscare lenta, de sus in jos)
+const MAX_STAMPS = 1024 // cate "stampile" de burete desenam maxim intr-un cadru
+const ROLLER_STAMP = 0.3 // stampilele trafaletului sunt mai mici decat buretele, ca marginea sa aiba textura rolei
+
+// ---------- telefon: trafaletul care descopera poza ----------
+const ROLLER_LEN = 170 // lungimea rolei in unitatile modelului; pe ecran o scalam la ~45% din latime
+const ROLLER_RADIUS = 22
+const ROLLER_WIDTH = 0.45 // lungimea rolei pe ecran, ca fractiune din latimea hero-ului
+const STROKES_SECONDS = 9 // cat dureaza toate trecerile la un loc (impartite dupa lungime); mai mare = mai lent
+const SHIFT_SECONDS = 0.6 // cat dureaza mutarea de la o trecere la urmatoarea
+
+type RollerPath = {
+    points: { x: number; y: number; d: number }[] // d = cate secunde dureaza drumul pana la punctul respectiv
+    total: number
+    tilt: number // unghiul rolei (perpendiculara pe directia de mers)
+    dx: number // directia de mers, pe ecran
+    dy: number
+}
+
+// traseul trafaletului, ca mana unui zugrav, dar pe diagonala: prima trecere porneste din coltul din stanga-sus
+// si merge spre dreapta-jos, apoi treceri paralele, dus-intors, cate una langa alta, pana acopera tot hero-ul
+function buildRollerPath(w: number, h: number): RollerPath {
+    const len = Math.hypot(w, h)
+    const dx = w / len // directia diagonalei (stanga-sus -> dreapta-jos)
+    const dy = h / len
+    const px = -dy // perpendiculara pe ea
+    const py = dx
+    const roller = w * ROLLER_WIDTH
+    const margin = roller * 0.6 // trafaletul intra si iese complet din cadru
+    const halfAcross = (w / 2) * Math.abs(px) + (h / 2) * Math.abs(py)
+    const gap = roller * 0.85 // trecerile se suprapun putin
+    const side = Math.ceil((halfAcross - roller / 2) / gap)
+
+    // ordinea trecerilor: diagonala din colt, apoi spre o parte, apoi spre cealalta
+    const offsets = [0]
+    for (let i = 1; i <= side; i++) offsets.push(i * gap)
+    for (let i = 1; i <= side; i++) offsets.push(-i * gap)
+
+    // pe fiecare trecere, doar bucata care atinge poza (plus marginea), ca sa nu piarda timp in afara ei
+    const range = (u: number) => {
+        const cx = w / 2 + px * u
+        const cy = h / 2 + py * u
+        const ax = [(-margin - cx) / dx, (w + margin - cx) / dx]
+        const ay = [(-margin - cy) / dy, (h + margin - cy) / dy]
+        return [Math.max(Math.min(...ax), Math.min(...ay)), Math.min(Math.max(...ax), Math.max(...ay))]
+    }
+    const at = (u: number, a: number) => ({ x: w / 2 + px * u + dx * a, y: h / 2 + py * u + dy * a })
+
+    // timpul total al trecerilor e fix (si pe telefon, si pe tableta), impartit dupa lungimea fiecarei treceri
+    const ranges = offsets.map(range)
+    const totalLength = ranges.reduce((sum, [a0, a1]) => sum + (a1 - a0), 0)
+
+    const points: RollerPath["points"] = []
+    offsets.forEach((u, i) => {
+        const [a0, a1] = ranges[i]
+        // trecerile alterneaza: una in jos, una in sus
+        const [from, to] = i % 2 === 0 ? [a0, a1] : [a1, a0]
+        points.push({ ...at(u, from), d: i === 0 ? 0 : SHIFT_SECONDS })
+        points.push({ ...at(u, to), d: ((a1 - a0) / totalLength) * STROKES_SECONDS })
+    })
+    // la final iese complet din cadru, cu tot cu maner
+    const last = points[points.length - 1]
+    const exitDir = offsets.length % 2 === 1 ? 1 : -1
+    points.push({ x: last.x + dx * exitDir * roller, y: last.y + dy * exitDir * roller, d: 0.8 })
+
+    // unghiul rolei: perpendiculara pe directia de mers, cu manerul in jos
+    let tilt = Math.atan2(-dy, dx) - Math.PI / 2
+    while (tilt <= -Math.PI / 2) tilt += Math.PI
+    while (tilt > Math.PI / 2) tilt -= Math.PI
+
+    return { points, total: points.reduce((sum, p) => sum + p.d, 0), tilt, dx, dy }
+}
+
+// pozitia trafaletului (in pixeli) la momentul `time`, cu pornire si oprire lina pe fiecare bucata de drum
+function rollerAt(path: RollerPath, time: number) {
+    const { points } = path
+    let t = Math.max(0, time)
+    for (let i = 1; i < points.length; i++) {
+        const a = points[i - 1]
+        const b = points[i]
+        if (t <= b.d) {
+            const k = b.d > 0 ? t / b.d : 1
+            const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2
+            return { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e }
+        }
+        t -= b.d
+    }
+    return { x: points[points.length - 1].x, y: points[points.length - 1].y }
+}
+
+// o bara (cilindru) intre doua puncte, pentru cadrul metalic si maner
+function Bar({ from, to, radius, color }: { from: [number, number, number]; to: [number, number, number]; radius: number; color: string }) {
+    const { position, quaternion, length } = useMemo(() => {
+        const a = new THREE.Vector3(...from)
+        const b = new THREE.Vector3(...to)
+        const dir = b.clone().sub(a)
+        return {
+            position: a.clone().add(b).multiplyScalar(0.5),
+            quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()),
+            length: dir.length(),
+        }
+    }, [from, to])
+    return (
+        <mesh position={position} quaternion={quaternion}>
+            <cylinderGeometry args={[radius, radius, length, 12]} />
+            <meshLambertMaterial color={color} />
+        </mesh>
+    )
+}
+
+// punctele cadrului, definite o singura data (ca Bar sa nu recalculeze la fiecare randare)
+const FRAME_A: [number, number, number] = [ROLLER_LEN / 2, 0, 0]
+const FRAME_B: [number, number, number] = [ROLLER_LEN / 2 + 14, 0, 0]
+const FRAME_C: [number, number, number] = [ROLLER_LEN / 2 + 14, -36, 0]
+const FRAME_D: [number, number, number] = [0, -78, 0]
+const HANDLE_END: [number, number, number] = [0, -165, 0]
 
 // un dreptunghi care acopera tot canvas-ul, fara camera
 const vertexShader = `
@@ -94,11 +206,12 @@ const fragmentShader = `
   uniform sampler2D uMask;
   uniform float uWide; // 1 = desktop (strat verde de la stanga la dreapta), 0 = telefon/tableta (de sus in jos)
   uniform vec3 uForest; // verdele inchis al site-ului
+  uniform float uCover; // 1 = telefon: in loc de poza murdara, un strat verde plin pe care il "da jos" trafaletul
   ${shaderCommon}
 
   void main() {
     vec3 clean = samplePhoto() * 1.08; // culorile reale, putin mai luminoase
-    vec3 dirty = texture2D(uDirty, vUv).rgb;
+    vec3 dirty = mix(texture2D(uDirty, vUv).rgb, uForest, uCover);
 
     float m = smoothstep(0.05, 0.6, texture2D(uMask, vUv).r);
     vec3 color = mix(dirty, clean, m);
@@ -122,17 +235,24 @@ const fragmentShader = `
 // 3) masca, desenata direct pe placa video (nu intr-un canvas 2D copiat la fiecare cadru, care era lent pe telefon):
 //    - "stampile" de burete: puncte rotunde, albe, cu margini moi
 //    - "murdarirea" la loc: un dreptunghi negru, aproape transparent, desenat peste masca
+//    position.z = 0: stampila normala (burete); position.z > 0: stampila mica de trafalet, cu taria z
+//    (o taria mica curata doar putin, asa raman "urmele" trafaletului)
 const stampVertexShader = `
   uniform float uSize;
+  uniform float uSmall;
+  varying float vStrength;
   void main() {
     gl_Position = vec4(position.xy, 0.0, 1.0);
-    gl_PointSize = uSize;
+    float small = step(0.0001, position.z);
+    gl_PointSize = uSize * mix(1.0, uSmall, small);
+    vStrength = mix(0.9, position.z, small);
   }
 `
 const stampFragmentShader = `
+  varying float vStrength;
   void main() {
     float d = length(gl_PointCoord - 0.5);
-    gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.15, d) * 0.9);
+    gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.15, d) * vStrength);
   }
 `
 const fadeFragmentShader = `
@@ -225,6 +345,9 @@ function CleanPlane() {
     const photo = useLoader(THREE.TextureLoader, "/hero-bg.jpg")
     const reduceMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, [])
     const coarse = useMemo(() => window.matchMedia("(pointer: coarse)").matches, [])
+    // telefon (fara "reduce motion"): hero-ul porneste verde si trafaletul descopera poza, o singura data
+    const cover = coarse && !reduceMotion
+    const rollerPath = useMemo(() => buildRollerPath(size.width, size.height), [size.width, size.height])
 
     // valorile initiale trimise shader-ului; le modificam apoi prin materialRef
     const [uniforms] = useState(() => ({
@@ -236,6 +359,7 @@ function CleanPlane() {
         uWide: { value: 1 },
         // #0F2318 ca valori brute 0..1 (canvas-ul lucreaza fara conversii de culoare)
         uForest: { value: new THREE.Vector3(15 / 255, 35 / 255, 24 / 255) },
+        uCover: { value: cover ? 1 : 0 },
     }))
 
     const materialRef = useRef<THREE.ShaderMaterial>(null)
@@ -245,7 +369,26 @@ function CleanPlane() {
     const last = useRef<{ x: number; y: number } | null>(null)
     const start = useRef<number | null>(null)
     const sweeping = useRef(false) // daca in cadrul anterior rula o stergere automata
-    const sweepY = useRef<number | null>(null) // pe telefon: unde a ajuns banda de stergere in cadrul anterior
+    const rollerPrev = useRef<{ x: number; y: number; tilt: number } | null>(null) // pozitia trafaletului in cadrul anterior
+    const revealDone = useRef(false) // pe telefon: trafaletul a terminat, poza ramane curata
+    const tool = useRef<THREE.Group>(null)
+    const rollerMesh = useRef<THREE.Mesh>(null)
+    // textura rolei: fire fine, putin diferite ca nuanta, ca sa se vada cum se invarte
+    const [napTexture] = useState(() => {
+        const canvas = document.createElement("canvas")
+        canvas.width = 8
+        canvas.height = 64
+        const ctx = canvas.getContext("2d")!
+        for (let y = 0; y < 64; y++) {
+            const shade = 215 + Math.floor(Math.random() * 40)
+            ctx.fillStyle = `rgb(${shade}, ${shade - 8}, ${shade - 22})`
+            ctx.fillRect(0, y, 8, 1)
+        }
+        const texture = new THREE.CanvasTexture(canvas)
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+        return texture
+    })
+    useEffect(() => () => napTexture.dispose(), [napTexture])
     const sparkPoints = useRef<THREE.Points>(null)
     const sparks = useRef<SparkData | null>(null)
     const [sparkUniforms] = useState(() => ({ uPixelRatio: { value: 1 } }))
@@ -299,7 +442,7 @@ function CleanPlane() {
         const stampMaterial = new THREE.ShaderMaterial({
             vertexShader: stampVertexShader,
             fragmentShader: stampFragmentShader,
-            uniforms: { uSize: { value: 1 } },
+            uniforms: { uSize: { value: 1 }, uSmall: { value: ROLLER_STAMP } },
             transparent: true,
             depthTest: false,
             depthWrite: false,
@@ -376,10 +519,10 @@ function CleanPlane() {
         const previousClear = gl.getClearColor(new THREE.Color())
         const previousAlpha = gl.getClearAlpha()
 
-        // masca noua, complet neagra (= totul murdar)
+        // masca noua, complet neagra (= totul murdar); pe telefon, daca trafaletul a terminat deja, alba (= curat)
         mask.target.setSize(Math.max(1, Math.round(size.width * mask.scale)), Math.max(1, Math.round(size.height * mask.scale)))
         gl.setRenderTarget(mask.target)
-        gl.setClearColor(0x000000, 1)
+        gl.setClearColor(revealDone.current ? 0xffffff : 0x000000, 1)
         gl.clear()
 
         // coacem murdaria o singura data, la rezolutia reala a canvas-ului
@@ -443,13 +586,6 @@ function CleanPlane() {
         }
     }, [gl, invalidate, size])
 
-    // pe telefoane, pornim din cand in cand cate o stergere automata (canvas-ul deseneaza doar la cerere)
-    useEffect(() => {
-        if (!coarse || reduceMotion) return
-        const id = setInterval(() => invalidate(), AUTO_EVERY * 1000)
-        return () => clearInterval(id)
-    }, [coarse, reduceMotion, invalidate])
-
     useFrame((state, delta) => {
         const mask = maskRef.current
         if (!mask) return
@@ -459,37 +595,81 @@ function CleanPlane() {
         // stampilele de burete pentru cadrul curent (in coordonate de ecran -1..1)
         const brush = Math.min(BRUSH_PX, size.width * 0.13)
         let stamps = 0
-        const addStamp = (x: number, y: number) => {
+        const addStamp = (x: number, y: number, strength = 0) => {
             if (stamps >= MAX_STAMPS) return
             mask.stampPositions[stamps * 3] = (x / size.width) * 2 - 1
             mask.stampPositions[stamps * 3 + 1] = 1 - (y / size.height) * 2
+            mask.stampPositions[stamps * 3 + 2] = strength
             stamps++
         }
 
         // stergerea automata
         const elapsed = t - start.current
         let introRunning = false
-        if (!reduceMotion && coarse) {
-            // telefon: ca o racleta pe geam, o banda lata cat toata poza coboara lent de sus in jos
-            // si curata toata imaginea; apoi murdaria revine treptat si ciclul se reia
-            const progress = (elapsed % AUTO_EVERY) / SWEEP_SECONDS
-            if (progress <= 1) {
+        if (cover) {
+            // telefon: trafaletul 3D trece de cateva ori peste stratul verde si descopera poza, o singura data
+            const w = size.width
+            const h = size.height
+            const rollerTime = elapsed - 0.3 // o mica pauza inainte sa intre in cadru
+            const done = rollerTime > rollerPath.total
+            if (!done && !revealDone.current) {
                 introRunning = true
-                const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2 // lent-rapid-lent
-                const y = -brush + (size.height + 2 * brush) * eased
-                // umplem tot ce a parcurs banda de la cadrul trecut, ca sa nu ramana dungi murdare
-                const fromY = sweepY.current ?? y
-                const rowStep = brush * 0.5
-                for (let rowY = fromY; rowY <= y; rowY += rowStep) {
-                    for (let x = -brush * 0.5; x <= size.width + brush * 0.5; x += brush * 0.6) addStamp(x, rowY)
+                const pos = rollerAt(rollerPath, rollerTime)
+                // rola sta perpendicular pe diagonala, cu o mica oscilatie, ca tinuta de mana
+                const tilt = rollerPath.tilt + Math.sin(rollerTime * 1.7) * 0.05
+                const prev = rollerPrev.current ?? { ...pos, tilt }
+                const vx = pos.x - prev.x
+                const vy = pos.y - prev.y
+
+                const scale = (w * ROLLER_WIDTH) / ROLLER_LEN
+                const half = (ROLLER_LEN / 2) * scale
+                const dot = brush * 2.6 * ROLLER_STAMP // diametrul unei stampile de trafalet
+                const spacing = dot * 0.25
+
+                // o "linie" de stampile pe lungimea rolei; taria variaza putin la fiecare stampila,
+                // asa marginea zonei curatate are textura rolei, nu e o linie perfect neteda
+                const rollAt = (x: number, y: number, a: number) => {
+                    const cx = Math.cos(a)
+                    const cy = -Math.sin(a) // pe ecran, y creste in jos
+                    for (let r = -half; r <= half; r += spacing) addStamp(x + cx * r, y + cy * r, 0.3 + Math.random() * 0.6)
                 }
-                for (let x = -brush * 0.5; x <= size.width + brush * 0.5; x += brush * 0.6) addStamp(x, y)
-                sweepY.current = y
+                // umplem tot drumul de la cadrul trecut, ca sa nu ramana goluri
+                const dist = Math.hypot(vx, vy)
+                // daca telefonul a sarit cadre si drumul e lung, rarim liniile ca sa nu depasim limita de stampile
+                const perRow = Math.ceil((2 * half) / spacing) + 1
+                const steps = Math.max(1, Math.min(Math.ceil(dist / spacing), Math.floor(MAX_STAMPS / perRow)))
+                for (let s = 1; s <= steps; s++) {
+                    const k = s / steps
+                    rollAt(prev.x + vx * k, prev.y + vy * k, prev.tilt + (tilt - prev.tilt) * k)
+                }
+                rollerPrev.current = { ...pos, tilt }
                 mask.lastWipe = t
-            } else {
-                sweepY.current = null
+
+                // modelul 3D: il mutam in pozitia rolei si invartim rola cat a parcurs
+                if (tool.current) {
+                    tool.current.visible = true
+                    tool.current.position.set(pos.x - w / 2, h / 2 - pos.y, 0)
+                    tool.current.rotation.z = tilt
+                    tool.current.scale.setScalar(scale)
+                }
+                if (rollerMesh.current) {
+                    const rolled = vx * rollerPath.dx + vy * rollerPath.dy // cat a inaintat pe directia trecerii
+                    rollerMesh.current.rotation.x += rolled / (ROLLER_RADIUS * scale)
+                }
+            } else if (!revealDone.current) {
+                // gata: ascundem trafaletul si ne asiguram ca poza e complet curata
+                revealDone.current = true
+                if (tool.current) tool.current.visible = false
+                const renderer = state.gl
+                renderer.setRenderTarget(mask.target)
+                const previousClear = renderer.getClearColor(new THREE.Color())
+                const previousAlpha = renderer.getClearAlpha()
+                renderer.setClearColor(0xffffff, 1)
+                renderer.clear()
+                renderer.setClearColor(previousClear, previousAlpha)
+                renderer.setRenderTarget(null)
             }
-        } else if (!reduceMotion) {
+        } else if (!reduceMotion && !coarse) {
             // calculator: o singura stergere la incarcare, pe partea dreapta, ca vizitatorul sa vada efectul
             const progress = elapsed / 1.8
             if (progress <= 1) {
@@ -536,7 +716,8 @@ function CleanPlane() {
 
         // actualizam masca direct pe placa video: intai "murdarim" putin (o data la 3 cadre), apoi desenam stampilele
         mask.frame++
-        const wiping = t - mask.lastWipe < IDLE_AFTER
+        // pe telefon, poza descoperita ramane curata (murdaria nu mai revine)
+        const wiping = !cover && t - mask.lastWipe < IDLE_AFTER
         const fadeNow = wiping && mask.frame % 3 === 0
         if (fadeNow || stamps > 0) {
             const renderer = state.gl
@@ -544,8 +725,7 @@ function CleanPlane() {
             renderer.autoClear = false // desenam peste masca existenta, nu o stergem
             renderer.setRenderTarget(mask.target)
             if (fadeNow) {
-                // pe telefon murdaria revine ceva mai repede, ca fiecare stergere automata sa inceapa pe o poza murdara
-                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : coarse ? 0.035 : 0.024
+                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : 0.024
                 renderer.render(mask.fadeScene, mask.camera)
             }
             if (stamps > 0) {
@@ -605,6 +785,25 @@ function CleanPlane() {
                     blending={THREE.AdditiveBlending}
                 />
             </points>
+
+            {/* telefon: trafaletul 3D (rola crem, cadru metalic, maner mustar), construit din cilindri simpli,
+                fara model descarcat. e inclinat spre privitor, ca manerul sa vina "din ecran" */}
+            {cover && (
+                <group ref={tool} visible={false} renderOrder={2}>
+                    <ambientLight intensity={1.6} />
+                    <directionalLight position={[-200, 300, 400]} intensity={2.2} />
+                    <group rotation-x={-0.6}>
+                        <mesh ref={rollerMesh} rotation-z={Math.PI / 2}>
+                            <cylinderGeometry args={[ROLLER_RADIUS, ROLLER_RADIUS, ROLLER_LEN, 28]} />
+                            <meshLambertMaterial map={napTexture} />
+                        </mesh>
+                        <Bar from={FRAME_A} to={FRAME_B} radius={3} color="#c9ccc9" />
+                        <Bar from={FRAME_B} to={FRAME_C} radius={3} color="#c9ccc9" />
+                        <Bar from={FRAME_C} to={FRAME_D} radius={3} color="#c9ccc9" />
+                        <Bar from={FRAME_D} to={HANDLE_END} radius={9} color="#E5A93C" />
+                    </group>
+                </group>
+            )}
         </>
     )
 }
@@ -630,6 +829,9 @@ export default function HeroCleanScene() {
                 // fara conversii de culoare: poza apare exact cum e in fisier
                 flat
                 linear
+                // camera ortografica, 1 unitate = 1 pixel: trafaletul se pozitioneaza direct in pixeli
+                orthographic
+                camera={{ position: [0, 0, 500], near: 1, far: 2000, zoom: 1 }}
                 dpr={[1, maxDpr]}
                 // "demand": deseneaza doar cand se schimba ceva (stergere, scantei), nu de 60 de ori pe secunda
                 frameloop={visible ? "demand" : "never"}

@@ -13,7 +13,8 @@ export default function Hero() {
                 fill
                 priority
                 sizes="100vw"
-                className="object-cover object-[right_35%]"
+                // pe telefon poza nu se vede de la inceput: hero-ul e verde si trafaletul din animatie o descopera
+                className="object-cover object-[right_35%] [@media(pointer:coarse)]:motion-safe:opacity-0"
             />
             {/* strat verde peste poza, ca textul alb sa se citeasca (pe telefon mai inchis sus, pe desktop in stanga).
                 se vede doar pana porneste animatia; apoi shader-ul deseneaza singur acelasi strat, peste el */}
