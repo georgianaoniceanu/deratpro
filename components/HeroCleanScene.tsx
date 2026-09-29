@@ -395,11 +395,25 @@ function CleanPlane() {
 
     // mouse / deget: canvas-ul e sub text, asa ca ascultam pe window si verificam daca e peste hero
     useEffect(() => {
+        // pozitia canvas-ului in pagina, calculata o singura data (si la redimensionare).
+        // s-o cerem la fiecare miscare a degetului (getBoundingClientRect) obliga telefonul sa recalculeze
+        // layout-ul paginii in timpul derularii, ceea ce producea lag
+        let box = { left: 0, top: 0, width: 0, height: 0 }
+        const measure = () => {
+            const r = gl.domElement.getBoundingClientRect()
+            box = { left: r.left + window.scrollX, top: r.top + window.scrollY, width: r.width, height: r.height }
+        }
+        measure()
+        // la montare canvas-ul poate avea inca dimensiunea 0; il masuram din nou cand isi primeste dimensiunea reala
+        const resizeObserver = new ResizeObserver(measure)
+        resizeObserver.observe(gl.domElement)
+
         function addPoint(clientX: number, clientY: number) {
-            const rect = gl.domElement.getBoundingClientRect()
-            const x = clientX - rect.left
-            const y = clientY - rect.top
-            if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+            if (box.width === 0) measure() // siguranta, daca masurarea initiala a iesit goala
+            // coordonate in pagina = coordonate pe ecran + cat s-a derulat (citirea scroll-ului nu recalculeaza layout-ul)
+            const x = clientX + window.scrollX - box.left
+            const y = clientY + window.scrollY - box.top
+            if (x < 0 || y < 0 || x > box.width || y > box.height) {
                 last.current = null
                 return
             }
@@ -419,19 +433,24 @@ function CleanPlane() {
             last.current = null
         }
 
+        window.addEventListener("resize", measure)
+        window.addEventListener("load", measure)
         window.addEventListener("pointermove", onPointer)
         window.addEventListener("pointerdown", onPointer)
         window.addEventListener("touchstart", onTouch, { passive: true })
         window.addEventListener("touchmove", onTouch, { passive: true })
         window.addEventListener("touchend", onTouchEnd)
         return () => {
+            resizeObserver.disconnect()
+            window.removeEventListener("resize", measure)
+            window.removeEventListener("load", measure)
             window.removeEventListener("pointermove", onPointer)
             window.removeEventListener("pointerdown", onPointer)
             window.removeEventListener("touchstart", onTouch)
             window.removeEventListener("touchmove", onTouch)
             window.removeEventListener("touchend", onTouchEnd)
         }
-    }, [gl, invalidate])
+    }, [gl, invalidate, size])
 
     useFrame((state, delta) => {
         const mask = maskRef.current
@@ -466,7 +485,8 @@ function CleanPlane() {
             mask.lastWipe = t
 
             // pe masura ce buretele avanseaza, lasam in urma cate o scanteie
-            if (sp && !reduceMotion) {
+            // (pe telefoane, fara scantei: mai putin de desenat)
+            if (sp && !reduceMotion && !coarse) {
                 sp.travelled += dist
                 while (sp.travelled > SPARK_EVERY_PX) {
                     sp.travelled -= SPARK_EVERY_PX
@@ -540,7 +560,7 @@ function CleanPlane() {
             </mesh>
 
             {/* scanteile se desenează peste poza; geometria e atasata din useEffect */}
-            <points ref={sparkPoints} frustumCulled={false} renderOrder={1}>
+            <points ref={sparkPoints} frustumCulled={false} renderOrder={1} visible={!coarse}>
                 <shaderMaterial
                     vertexShader={sparkVertexShader}
                     fragmentShader={sparkFragmentShader}
