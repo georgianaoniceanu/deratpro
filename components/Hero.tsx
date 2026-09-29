@@ -1,9 +1,22 @@
+import Image from "next/image"
 import { contactInfo } from "@/data/date"
 
 export default function Hero() {
     return (
-        <section id="hero" className="bg-forest text-white min-h-[calc(100svh-185px)] sm:min-h-[calc(100svh-177px)] lg:min-h-[calc(100svh-193px)] xl:min-h-[calc(100svh-225px)] flex items-center py-16 sm:py-20">
-            <div className="w-full max-w-7xl mx-auto px-6 lg:px-12">
+        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-185px)] sm:min-h-[calc(100svh-177px)] lg:min-h-[calc(100svh-193px)] xl:min-h-[calc(100svh-225px)] flex items-center py-16 sm:py-20">
+            {/* fotografia de fundal; decorativa, deci alt gol */}
+            <Image
+                src="/hero-bg.jpg"
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover object-[right_35%]"
+            />
+            {/* strat verde peste poza, ca textul alb sa se citeasca: plin pe telefon, gradient pe desktop */}
+            <div className="absolute inset-0 bg-forest/85 lg:bg-transparent lg:bg-linear-to-r lg:from-forest lg:via-forest/85 lg:to-forest/30" aria-hidden="true" />
+
+            <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] mb-6 text-balance">
                     Cu DeratPro, spațiile tale rămân <span className="font-serif italic text-mustard">curate</span>
                 </h1>
