@@ -7,7 +7,6 @@ import * as THREE from "three"
 // dimensiunile fotografiei din public/hero-bg.jpg (pentru incadrarea de tip "cover")
 const PHOTO_ASPECT = 2400 / 2053
 const BRUSH_PX = 70 // raza "buretelui" in pixeli de ecran
-const IDLE_AFTER = 9 // secunde fara stergere dupa care masca e sigur complet murdara si ne oprim din desenat
 const MAX_STAMPS = 1024 // cate "stampile" de burete desenam maxim intr-un cadru
 const FOG_STAMP = 1.1 // stampilele cetii: putin mai mari decat buretele, foarte moi si slabe
 
@@ -200,7 +199,7 @@ const fragmentShader = `
 
 // 3) masca, desenata direct pe placa video (nu intr-un canvas 2D copiat la fiecare cadru, care era lent pe telefon):
 //    - "stampile" de burete: puncte rotunde, albe, cu margini moi
-//    - "murdarirea" la loc: un dreptunghi negru, aproape transparent, desenat peste masca
+//    - un dreptunghi alb, aproape transparent, desenat peste masca la finalul cetii (curata lin ce a ramas)
 //    position.z = 0: stampila normala (burete); position.z > 0: stampila de ceata, cu taria z
 //    (fiecare curata foarte putin; ceata dizolva verdele treptat, pe masura ce se aduna)
 const stampVertexShader = `
@@ -221,7 +220,13 @@ const stampFragmentShader = `
     gl_FragColor = vec4(1.0, 1.0, 1.0, smoothstep(0.5, 0.15, d) * vStrength);
   }
 `
-// uFill = 0: "murdareste" la loc (negru); uFill = 1: curata tot, lin (alb), la finalul cetii de pe telefon
+// copierea mastii vechi in cea noua, cand se redimensioneaza hero-ul (ca zona stearsa sa ramana stearsa)
+const copyFragmentShader = `
+  uniform sampler2D uTex;
+  varying vec2 vUv;
+  void main() { gl_FragColor = texture2D(uTex, vUv); }
+`
+// uFill = 1: curata tot, lin (alb), la finalul cetii de pe telefon; uFade = cat de tare, la fiecare cadru
 const fadeFragmentShader = `
   uniform float uFade;
   uniform float uFill;
@@ -279,8 +284,9 @@ type MaskData = {
     stampPositions: Float32Array
     stampMaterial: THREE.ShaderMaterial
     camera: THREE.Camera
-    frame: number
-    lastWipe: number // cand s-a sters ultima data (secunde)
+    copyScene: THREE.Scene
+    copyMaterial: THREE.ShaderMaterial
+    ready: boolean // false pana la prima dimensionare (atunci masca porneste complet murdara)
 }
 
 type BakeData = {
@@ -402,7 +408,7 @@ function CleanPlane() {
         return () => geometry.dispose()
     }, [gl])
 
-    // masca pe placa video: o textura in care desenam direct stampilele de burete si "murdarirea"
+    // masca pe placa video: o textura in care desenam direct stampilele de burete si de ceata
     useEffect(() => {
         const camera = new THREE.Camera()
         const target = new THREE.WebGLRenderTarget(1, 1, { depthBuffer: false })
@@ -429,12 +435,22 @@ function CleanPlane() {
             depthTest: false,
             depthWrite: false,
         })
+        const copyMaterial = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader: copyFragmentShader,
+            uniforms: { uTex: { value: null } },
+            depthTest: false,
+            depthWrite: false,
+        })
+        const copyScene = new THREE.Scene()
+        copyScene.add(fullscreenQuad(copyMaterial))
+
         const stampPoints = new THREE.Points(stampGeometry, stampMaterial)
         stampPoints.frustumCulled = false
         const stampScene = new THREE.Scene()
         stampScene.add(stampPoints)
 
-        maskRef.current = {
+        const data: MaskData = {
             target,
             // pe telefon, masca are rezolutie mai mica (e oricum estompata)
             scale: coarse ? 0.35 : 0.5,
@@ -445,12 +461,15 @@ function CleanPlane() {
             stampPositions,
             stampMaterial,
             camera,
-            frame: 0,
-            lastWipe: -IDLE_AFTER,
+            copyScene,
+            copyMaterial,
+            ready: false,
         }
+        maskRef.current = data
         if (materialRef.current) materialRef.current.uniforms.uMask.value = target.texture
         return () => {
-            target.dispose()
+            data.target.dispose() // (poate fi alta decat cea de la inceput, dupa o redimensionare)
+            copyMaterial.dispose()
             fadeMaterial.dispose()
             stampMaterial.dispose()
             stampGeometry.dispose()
@@ -482,14 +501,17 @@ function CleanPlane() {
         }
     }, [photo])
 
-    // la redimensionare: incadram poza, golim masca si "coacem" din nou murdaria la noua dimensiune
+    // la redimensionare: incadram poza, mutam masca la noua dimensiune (pastrand ce s-a sters)
+    // si "coacem" din nou murdaria. depinde doar de latime si inaltime: la scroll, r3f actualizeaza si
+    // pozitia canvas-ului in pagina, iar asta nu trebuie sa atinga masca
+    const { width, height } = size
     useEffect(() => {
         const mask = maskRef.current
         const bake = bakeRef.current
         const material = materialRef.current
         if (!mask || !bake || !material) return
 
-        const canvasAspect = size.width / size.height
+        const canvasAspect = width / height
         const { scale, offset } = coverUv(canvasAspect)
 
         const u = material.uniforms
@@ -501,11 +523,25 @@ function CleanPlane() {
         const previousClear = gl.getClearColor(new THREE.Color())
         const previousAlpha = gl.getClearAlpha()
 
-        // masca noua, complet neagra (= totul murdar); pe telefon, daca ceata a terminat deja, alba (= curat)
-        mask.target.setSize(Math.max(1, Math.round(size.width * mask.scale)), Math.max(1, Math.round(size.height * mask.scale)))
-        gl.setRenderTarget(mask.target)
-        gl.setClearColor(revealDone.current ? 0xffffff : 0x000000, 1)
-        gl.clear()
+        const maskWidth = Math.max(1, Math.round(width * mask.scale))
+        const maskHeight = Math.max(1, Math.round(height * mask.scale))
+        if (!mask.ready) {
+            // prima data: masca complet neagra (= totul murdar / verde)
+            mask.target.setSize(maskWidth, maskHeight)
+            gl.setRenderTarget(mask.target)
+            gl.setClearColor(0x000000, 1)
+            gl.clear()
+            mask.ready = true
+        } else if (mask.target.width !== maskWidth || mask.target.height !== maskHeight) {
+            // dupa aceea: copiem masca veche, intinsa, intr-una noua, ca ce s-a sters sa ramana sters pana la refresh
+            const next = new THREE.WebGLRenderTarget(maskWidth, maskHeight, { depthBuffer: false })
+            mask.copyMaterial.uniforms.uTex.value = mask.target.texture
+            gl.setRenderTarget(next)
+            gl.render(mask.copyScene, mask.camera)
+            mask.target.dispose()
+            mask.target = next
+            u.uMask.value = next.texture
+        }
 
         // coacem murdaria o singura data, la rezolutia reala a canvas-ului
         const b = bake.material.uniforms
@@ -513,14 +549,14 @@ function CleanPlane() {
         b.uOffset.value.copy(offset)
         b.uAspect.value = canvasAspect
         const dpr = gl.getPixelRatio()
-        bake.target.setSize(Math.round(size.width * dpr), Math.round(size.height * dpr))
+        bake.target.setSize(Math.round(width * dpr), Math.round(height * dpr))
         gl.setRenderTarget(bake.target)
         gl.render(bake.scene, bake.camera)
 
         gl.setRenderTarget(null)
         gl.setClearColor(previousClear, previousAlpha)
         invalidate()
-    }, [size, gl, invalidate])
+    }, [width, height, gl, invalidate])
 
     // mouse / deget: canvas-ul e sub text, asa ca ascultam pe window si verificam daca e peste hero
     useEffect(() => {
@@ -599,7 +635,6 @@ function CleanPlane() {
             const sprayEnd = FOG_ENTER + FOG_SPRAY
             const ease = (k: number) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2)
             introRunning = true
-            mask.lastWipe = t
 
             // pozitia duzei: intra din colt, sta acolo cat pulverizeaza, apoi iese inapoi
             const rest = { x: w * 0.1, y: h * 0.06 }
@@ -718,7 +753,6 @@ function CleanPlane() {
             for (let s = 1; s <= steps; s++) {
                 addStamp(from.x + ((p.x - from.x) * s) / steps, from.y + ((p.y - from.y) * s) / steps)
             }
-            mask.lastWipe = t
 
             // pe masura ce buretele avanseaza, lasam in urma cate o scanteie
             // (pe telefoane, fara scantei: mai putin de desenat)
@@ -741,26 +775,16 @@ function CleanPlane() {
         }
         pending.current = []
 
-        // actualizam masca direct pe placa video: intai "murdarim" putin (o data la 3 cadre), apoi desenam stampilele
-        mask.frame++
-        // pe telefon, poza descoperita ramane curata (murdaria nu mai revine)
-        const wiping = !cover && t - mask.lastWipe < IDLE_AFTER
-        const fadeNow = wiping && mask.frame % 3 === 0
-        if (fadeNow || stamps > 0) {
+        // desenam stampilele direct in masca, pe placa video. ce s-a sters ramane curat (murdaria nu mai revine)
+        if (stamps > 0) {
             const renderer = state.gl
             const autoClear = renderer.autoClear
             renderer.autoClear = false // desenam peste masca existenta, nu o stergem
             renderer.setRenderTarget(mask.target)
-            if (fadeNow) {
-                mask.fadeMaterial.uniforms.uFade.value = reduceMotion ? 0.012 : 0.024
-                renderer.render(mask.fadeScene, mask.camera)
-            }
-            if (stamps > 0) {
-                mask.stampGeometry.attributes.position.needsUpdate = true
-                mask.stampGeometry.setDrawRange(0, stamps)
-                mask.stampMaterial.uniforms.uSize.value = brush * 2.6 * mask.scale
-                renderer.render(mask.stampScene, mask.camera)
-            }
+            mask.stampGeometry.attributes.position.needsUpdate = true
+            mask.stampGeometry.setDrawRange(0, stamps)
+            mask.stampMaterial.uniforms.uSize.value = brush * 2.6 * mask.scale
+            renderer.render(mask.stampScene, mask.camera)
             renderer.setRenderTarget(null)
             renderer.autoClear = autoClear
         }
@@ -787,7 +811,7 @@ function CleanPlane() {
 
         // canvas-ul deseneaza doar la cerere: continuam cat timp inca se misca ceva, apoi ne oprim complet
         // pe telefon, ~30 de cadre pe secunda in loc de 60 (suficient pentru o stergere lenta, cu jumatate din efort)
-        if (introRunning || wiping || sparksActive) {
+        if (introRunning || sparksActive) {
             if (coarse) setTimeout(() => state.invalidate(), 33)
             else state.invalidate()
         }
