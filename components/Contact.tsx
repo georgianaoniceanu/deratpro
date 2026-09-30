@@ -1,10 +1,11 @@
 "use client"
 import { Phone, Mail, Clock, MapPin } from "lucide-react"
 import {contactInfo} from "../data/date"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { ChangeEvent, CSSProperties, FocusEvent, SubmitEvent } from "react"
 // regulile de validare stau separat, in lib/validate.ts, ca sa poata fi testate automat
-import { validate, type Form } from "../lib/validate"
+import { validate, validateConsent, type Form } from "../lib/validate"
+import PrivacyDialog from "./PrivacyDialog"
 // id-ul din pagina al fiecarui camp (pentru label si pentru mutarea cursorului la primul camp gresit)
 const fieldIds: Record<keyof Form, string> = { nume: "nume", telefon: "tel", mesaj: "mesaj" }
 
@@ -12,6 +13,10 @@ export default function Contact(){
     const [form, setForm] = useState<Form>({nume: "", telefon: "", mesaj: ""})
     const [error, setError] = useState<Form>({nume: "", telefon: "", mesaj:""})
     const [sent, setSent] = useState(false)
+    // bifa de acord cu Politica de confidentialitate (obligatorie) si eroarea ei
+    const [consent, setConsent] = useState(false)
+    const [consentError, setConsentError] = useState("")
+    const privacyRef = useRef<HTMLDialogElement>(null)
     const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)=>{
         setSent(false)
         const name = e.target.name as keyof Form
@@ -27,10 +32,18 @@ export default function Contact(){
         if(form[name].trim() === "") return
         setError(prev => ({ ...prev, [name]: validate(form)[name] }))
     }
+    const handleConsent = (e : ChangeEvent<HTMLInputElement>)=>{
+        setSent(false)
+        setConsent(e.target.checked)
+        // eroarea dispare imediat ce bifeaza
+        if(consentError) setConsentError(validateConsent(e.target.checked))
+    }
     const handleSubmit = (e:SubmitEvent<HTMLFormElement>)=>{
         e.preventDefault()
         const found = validate(form)
         setError(found)
+        const foundConsent = validateConsent(consent)
+        setConsentError(foundConsent)
         // primul camp gresit, in ordinea din formular: ducem cursorul acolo, ca vizitatorul sa stie de unde sa inceapa
         // (il aducem in mijlocul ecranului, ca sa nu ramana ascuns sub navbar-ul lipit sus)
         const firstInvalid = (["nume", "telefon", "mesaj"] as const).find(field => found[field] !== "")
@@ -40,8 +53,14 @@ export default function Contact(){
             input?.scrollIntoView({ block: "center", behavior: "smooth" })
             return
         }
+        // campurile sunt corecte, dar lipseste bifa: ducem cursorul la ea
+        if(foundConsent){
+            document.getElementById("acord")?.focus()
+            return
+        }
         setSent(true)
         setForm({nume: "", telefon: "", mesaj: ""})
+        setConsent(false)
     }
     // clasele unui camp: contur rosu cand are eroare, mustar la focus altfel
     const fieldClass = (field: keyof Form) =>
@@ -145,6 +164,28 @@ export default function Contact(){
                             {error.mesaj && <p id="mesaj-error" className="mt-2 text-sm font-medium text-red-700 dark:text-red-400">{error.mesaj}</p>}
                         </div>
 
+                        {/* acordul cu Politica de confidentialitate: obligatoriu, pentru ca formularul colecteaza date personale.
+                            politica se deschide intr-o fereastra peste pagina, ca vizitatorul sa nu piarda ce a completat */}
+                        <div>
+                            <div className="flex items-start gap-3">
+                                <input type="checkbox" id="acord" name="acord" checked={consent} onChange={handleConsent}
+                                    // numele complet pentru cititoarele de ecran: butonul din eticheta nu intra in numele bifei
+                                    aria-label="Sunt de acord cu prelucrarea datelor mele conform Politicii de confidențialitate"
+                                    aria-invalid={consentError ? true : undefined}
+                                    aria-describedby={consentError ? "acord-error" : undefined}
+                                    className={`mt-1 w-5 h-5 shrink-0 rounded accent-forest dark:accent-mustard cursor-pointer ${consentError ? "outline-2 outline-red-600 outline-offset-2" : ""}`}/>
+                                <label htmlFor="acord" className="text-base text-typography-muted leading-relaxed cursor-pointer">
+                                    Sunt de acord cu prelucrarea datelor mele conform{" "}
+                                    <button type="button" onClick={() => privacyRef.current?.showModal()}
+                                        className="font-semibold text-[#9A6410] dark:text-mustard underline underline-offset-2 hover:no-underline">
+                                        Politicii de confidențialitate
+                                    </button>
+                                    .
+                                </label>
+                            </div>
+                            {consentError && <p id="acord-error" className="mt-2 text-sm font-medium text-red-700 dark:text-red-400">{consentError}</p>}
+                        </div>
+
                         <button type="submit" className="w-full py-4 bg-mustard hover:bg-mustard-hover text-forest font-bold rounded-xl transition hover:-translate-y-0.5">
                             Trimite cererea
                         </button>
@@ -159,6 +200,8 @@ export default function Contact(){
                     </form>
                 </div>
             </div>
+
+            <PrivacyDialog ref={privacyRef} />
         </section>
     )
 }

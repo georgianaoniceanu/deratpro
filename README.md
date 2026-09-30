@@ -120,7 +120,8 @@ components/
   WhyUs.tsx         avantaje si cifre
   Stats.tsx, CountUp.tsx   cifrele care "numara" cand apar pe ecran
   HowItWorks.tsx    cei 3 pasi
-  Contact.tsx       formularul, cu validare si confirmare
+  Contact.tsx       formularul, cu validare, acord GDPR si confirmare
+  PrivacyDialog.tsx fereastra cu Politica de confidentialitate
   Footer.tsx        navigare, contact si retele sociale
   FloatingOffer.tsx butonul plutitor "Ofertă"
   ThemeToggle.tsx   comutatorul light/dark
@@ -128,7 +129,7 @@ components/
 data/
   date.ts           toate textele (servicii, avantaje, pasi, contact), cu tipuri
 lib/
-  validate.ts       regulile de validare ale formularului (nume, telefon, mesaj)
+  validate.ts       regulile de validare ale formularului (nume, telefon, mesaj, acord)
   validate.test.ts  testele pentru ele
 ```
 
@@ -162,10 +163,11 @@ Ideea: firma curăță, deci poza din hero **se curăță** sub ochii vizitatoru
 
 ## Teste
 
-Validarea formularului e separată de componentă, în `lib/validate.ts`, ca să poată fi testată singură. `lib/validate.test.ts` are 17 teste care acoperă mai ales cazurile limită:
+Validarea formularului e separată de componentă, în `lib/validate.ts`, ca să poată fi testată singură. `lib/validate.test.ts` are 19 teste care acoperă mai ales cazurile limită:
 - **nume:** 2 caractere e respins, 3 caractere e acceptat, spațiile de la capete nu se numără;
 - **telefon:** formatele românești acceptate (`0720000000`, `0720 000 000`, `0720-000-000`, `+40720000000`) și numerele respinse (prea scurte, prea lungi, fix în loc de mobil, cu litere, cu prefix de altă țară);
 - **mesaj:** un mesaj sub 10 caractere e respins, unul de exact 10 caractere e acceptat;
+- **acordul GDPR:** fără bifă, cererea e respinsă;
 - un formular corect nu are nicio eroare, iar unul gol are erori la toate câmpurile.
 
 Le rulezi cu `npm test`.
@@ -187,6 +189,7 @@ Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Can
 
 ## Decizii și compromisuri
 
+- **Acord GDPR la formular.** Formularul colectează nume și telefon, adică date personale. De aceea are o bifă obligatorie de acord cu Politica de confidențialitate. Politica se deschide într-o fereastră peste pagină (`<dialog>`), ca vizitatorul să n-o piardă din vedere și nici să nu piardă ce a completat.
 - **Gândit pentru cine intră pe site.** Cine caută o firmă de deratizare are de obicei o problemă urgentă. De aceea numărul de urgențe e în hero, iar butonul „Ofertă” rămâne la îndemână când derulezi. Formularul are doar trei câmpuri și nu „ceartă” pe nimeni pentru un câmp lăsat gol până la trimitere.
 - **O singură animație, legată de mesaj.** Am renunțat la bulele de săpun, deși arătau bine, ca să rămână un singur efect principal, în hero, care spune povestea „spațiile tale rămân curate”.
 - **Animații diferite pe calculator și pe telefon.** Pe calculator, ștersul cu mouse-ul e interactiv și merge fluid. Pe telefon, ștersul cu degetul se confunda cu scroll-ul și se bloca pe telefoanele slabe, așa că acolo animația e automată (nebulizatorul) și rulează o singură dată. Compromisul: pe telefon vizitatorul doar privește, nu interacționează.
@@ -208,10 +211,12 @@ Deciziile au rămas ale mele. Am respins mai multe variante propuse sau generate
 
 ## Ce aș face mai departe
 
-- Trimiterea reală a formularului, cu un serviciu de email (de exemplu Resend) și protecție anti-spam.
-- Scorul Performance pe mobil: animația ar putea porni abia când browserul e complet liber, cu un strat static care să nu lase hero-ul gol până atunci.
-- Teste pentru componenta formularului (scriere în câmpuri, ieșire din câmp, trimitere), cu React Testing Library, și un test vizual pe câteva dimensiuni de ecran.
-- Pagini separate pentru fiecare serviciu, pentru SEO.
+- **Cererile să ajungă efectiv la firmă.** Acum formularul doar confirmă. Pentru un client real, cererea ar trebui să ajungă pe email sau pe WhatsApp la dispecerat, iar vizitatorul să primească o confirmare.
+- **Teste cu oameni reali.** Câțiva utilizatori, mai ales pe telefon, care să încerce să ceară o ofertă. Aș observa unde ezită și dacă înțeleg animația din hero.
+- **Conținut real.** Fotografii cu echipa și mașinile firmei în loc de fotografie de stoc, recenzii de la clienți, autorizațiile reale și o secțiune de întrebări frecvente, de exemplu dacă substanțele sunt sigure pentru copii și animale sau cât durează o intervenție.
+- **Măsurarea rezultatelor.** Câte vizite ajung la o cerere de ofertă sau la un apel și de pe ce dispozitive, ca să știu ce merită îmbunătățit.
+- **Politica de confidențialitate reală.** Acum e un text exemplificativ. Pentru o firmă reală, textul ar trebui scris sau verificat de un jurist, cu datele firmei și operatorul de date.
+- **Vizibilitate locală.** Profil Google Business și câte o pagină pentru fiecare serviciu, ca firma să apară când cineva caută „deratizare București”.
 
 ## Resurse
 

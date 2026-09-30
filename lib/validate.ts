@@ -27,3 +27,8 @@ export function validate({ nume, telefon, mesaj }: Form): Form {
 
     return errors
 }
+
+// bifa de acord cu Politica de confidentialitate: obligatorie, pentru ca formularul colecteaza date personale (GDPR)
+export function validateConsent(accepted: boolean): string {
+    return accepted ? "" : "Pentru a trimite cererea, trebuie să fii de acord cu Politica de confidențialitate."
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { validate, type Form } from "./validate"
+import { validate, validateConsent, type Form } from "./validate"
 
 // un formular completat corect; in fiecare test schimbam doar campul verificat
 const valid: Form = { nume: "Alexandru Popescu", telefon: "0720 000 000", mesaj: "Am gândaci în bucătărie." }
@@ -57,5 +57,15 @@ describe("mesaj", () => {
 
     it("acceptă un mesaj de exact 10 caractere", () => {
         expect(validate({ ...valid, mesaj: "1234567890" }).mesaj).toBe("")
+    })
+})
+
+describe("acord confidențialitate", () => {
+    it("respinge trimiterea fără bifă", () => {
+        expect(validateConsent(false)).not.toBe("")
+    })
+
+    it("acceptă trimiterea cu bifă", () => {
+        expect(validateConsent(true)).toBe("")
     })
 })
