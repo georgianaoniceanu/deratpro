@@ -4,15 +4,18 @@ import { useEffect, useState } from "react"
 import { ClipboardCheck } from "lucide-react"
 
 // buton "Oferta" care pluteste in coltul din dreapta jos si ramane la scroll.
-// apare dupa ce treci de hero (acolo exista deja butonul mare) si dispare cand ajungi la formularul de contact.
+// apare dupa ce treci de hero (acolo exista deja butonul mare) si dispare cand ajungi la formularul de contact
+// sau la partea de jos a footer-ului (copyright + semnatura), ca sa nu stea peste ele.
 export default function FloatingOffer() {
     const [heroVisible, setHeroVisible] = useState(true)
     const [contactVisible, setContactVisible] = useState(false)
+    const [bottomVisible, setBottomVisible] = useState(false)
 
     useEffect(() => {
         const hero = document.getElementById("hero")
         const contact = document.getElementById("contact")
-        if (!hero || !contact) return
+        const bottom = document.getElementById("footer-bottom") // copyright + semnatura, din Footer.tsx
+        if (!hero || !contact || !bottom) return
 
         const observer = new IntersectionObserver(
             entries => {
@@ -25,10 +28,18 @@ export default function FloatingOffer() {
         )
         observer.observe(hero)
         observer.observe(contact)
-        return () => observer.disconnect()
+
+        // partea de jos a footer-ului: ascundem butonul de cum apare primul pixel din ea
+        const bottomObserver = new IntersectionObserver(([entry]) => setBottomVisible(entry.isIntersecting))
+        bottomObserver.observe(bottom)
+
+        return () => {
+            observer.disconnect()
+            bottomObserver.disconnect()
+        }
     }, [])
 
-    const shown = !heroVisible && !contactVisible
+    const shown = !heroVisible && !contactVisible && !bottomVisible
 
     return (
         <a

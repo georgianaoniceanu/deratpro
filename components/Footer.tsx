@@ -111,11 +111,14 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <p className="mt-12 pt-6 border-t border-sand-dark text-sm text-typography-muted text-center">
-                    © 2026 DeratPro. Toate drepturile rezervate.
-                </p>
-                {/* semnatura autoarei, scrisa de mana, usor inclinata */}
-                <p className={`${signature.className} mt-3 text-2xl ${accent} text-center -rotate-2`}>Made by Georgiana</p>
+                {/* partea de jos (copyright + semnatura); FloatingOffer ascunde butonul "Ofertă" cand ajungi aici */}
+                <div id="footer-bottom">
+                    <p className="mt-12 pt-6 border-t border-sand-dark text-sm text-typography-muted text-center">
+                        © 2026 DeratPro. Toate drepturile rezervate.
+                    </p>
+                    {/* semnatura autoarei, scrisa de mana, usor inclinata */}
+                    <p className={`${signature.className} mt-3 text-2xl ${accent} text-center -rotate-2`}>Made by Georgiana</p>
+                </div>
             </div>
         </footer>
     )

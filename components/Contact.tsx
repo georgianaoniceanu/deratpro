@@ -2,12 +2,15 @@
 import { Phone, Mail, Clock, MapPin } from "lucide-react"
 import {contactInfo} from "../data/date"
 import { useState } from "react"
-import type { ChangeEvent, CSSProperties, SubmitEvent } from "react"
+import type { ChangeEvent, CSSProperties, FocusEvent, SubmitEvent } from "react"
 interface Form{
     nume: string,
     telefon: string,
     mesaj: string
 }
+// id-ul din pagina al fiecarui camp (pentru label si pentru mutarea cursorului la primul camp gresit)
+const fieldIds: Record<keyof Form, string> = { nume: "nume", telefon: "tel", mesaj: "mesaj" }
+
 export default function Contact(){
     const [form, setForm] = useState<Form>({nume: "", telefon: "", mesaj: ""})
     const [error, setError] = useState<Form>({nume: "", telefon: "", mesaj:""})
@@ -15,8 +18,8 @@ export default function Contact(){
     const validate = ({nume, telefon, mesaj}:Form): Form => {
         const errors: Form = {nume: "", telefon: "", mesaj: ""}
 
-        if(nume.trim().length < 2){
-            errors.nume = "Introdu numele tău (minimum 2 caractere)."
+        if(nume.trim().length < 3){
+            errors.nume = "Introdu numele tău (minimum 3 caractere)."
         }
 
         const phone = telefon.replace(/[\s-]/g, "")
@@ -32,15 +35,32 @@ export default function Contact(){
     }
     const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)=>{
         setSent(false)
-        const {name, value} = e.target
-        setForm(prev => ({ ...prev, [name]: value }))
+        const name = e.target.name as keyof Form
+        const next = { ...form, [name]: e.target.value }
+        setForm(next)
+        // daca acest camp are deja o eroare, o verificam din nou la fiecare tasta, ca sa dispara imediat ce e corect
+        if(error[name]) setError(prev => ({ ...prev, [name]: validate(next)[name] }))
+    }
+    // cand vizitatorul iese dintr-un camp in care a scris ceva, il verificam imediat (doar pe el), nu abia la trimitere.
+    // un camp lasat gol nu primeste eroare aici: poate doar a trecut prin el; golurile le semnalam la "Trimite"
+    const handleBlur = (e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>)=>{
+        const name = e.target.name as keyof Form
+        if(form[name].trim() === "") return
+        setError(prev => ({ ...prev, [name]: validate(form)[name] }))
     }
     const handleSubmit = (e:SubmitEvent<HTMLFormElement>)=>{
         e.preventDefault()
         const found = validate(form)
         setError(found)
-        const hasErrors = Object.values(found).some(msg => msg !== "")
-        if(hasErrors) return
+        // primul camp gresit, in ordinea din formular: ducem cursorul acolo, ca vizitatorul sa stie de unde sa inceapa
+        // (il aducem in mijlocul ecranului, ca sa nu ramana ascuns sub navbar-ul lipit sus)
+        const firstInvalid = (["nume", "telefon", "mesaj"] as const).find(field => found[field] !== "")
+        if(firstInvalid){
+            const input = document.getElementById(fieldIds[firstInvalid])
+            input?.focus({ preventScroll: true })
+            input?.scrollIntoView({ block: "center", behavior: "smooth" })
+            return
+        }
         setSent(true)
         setForm({nume: "", telefon: "", mesaj: ""})
     }
@@ -121,29 +141,29 @@ export default function Contact(){
                     <form noValidate onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label htmlFor="nume" className="block text-base font-bold mb-2">Nume și prenume</label>
-                            <input name="nume" value={form.nume} onChange={handleChange} type="text" id="nume" placeholder="Ex: Alexandru Popescu" autoComplete="name"
+                            <input name="nume" value={form.nume} onChange={handleChange} onBlur={handleBlur} type="text" id="nume" placeholder="Ex: Alexandru Popescu" autoComplete="name"
                                 aria-invalid={error.nume ? true : undefined}
                                 aria-describedby={error.nume ? "nume-error" : undefined}
                                 className={fieldClass("nume")}/>
-                            {error.nume && <p id="nume-error" className="mt-2 text-sm font-medium text-red-700">{error.nume}</p>}
+                            {error.nume && <p id="nume-error" className="mt-2 text-sm font-medium text-red-700 dark:text-red-400">{error.nume}</p>}
                         </div>
 
                         <div>
                             <label htmlFor="tel" className="block text-base font-bold mb-2">Număr de telefon</label>
-                            <input name="telefon" value={form.telefon} onChange={handleChange} type="tel" id="tel" placeholder="Ex: 0720 000 000" autoComplete="tel"
+                            <input name="telefon" value={form.telefon} onChange={handleChange} onBlur={handleBlur} type="tel" id="tel" placeholder="Ex: 0720 000 000" autoComplete="tel"
                                 aria-invalid={error.telefon ? true : undefined}
                                 aria-describedby={error.telefon ? "telefon-error" : undefined}
                                 className={fieldClass("telefon")}/>
-                            {error.telefon && <p id="telefon-error" className="mt-2 text-sm font-medium text-red-700">{error.telefon}</p>}
+                            {error.telefon && <p id="telefon-error" className="mt-2 text-sm font-medium text-red-700 dark:text-red-400">{error.telefon}</p>}
                         </div>
 
                         <div>
                             <label htmlFor="mesaj" className="block text-base font-bold mb-2">Mesaj / Detalii problemă</label>
-                            <textarea name="mesaj" value={form.mesaj} onChange={handleChange} rows={4} id="mesaj" placeholder="Descrie pe scurt tipul dăunătorilor și suprafața aproximativă..."
+                            <textarea name="mesaj" value={form.mesaj} onChange={handleChange} onBlur={handleBlur} rows={4} id="mesaj" placeholder="Descrie pe scurt tipul dăunătorilor și suprafața aproximativă..."
                                 aria-invalid={error.mesaj ? true : undefined}
                                 aria-describedby={error.mesaj ? "mesaj-error" : undefined}
                                 className={`${fieldClass("mesaj")} resize-none`}/>
-                            {error.mesaj && <p id="mesaj-error" className="mt-2 text-sm font-medium text-red-700">{error.mesaj}</p>}
+                            {error.mesaj && <p id="mesaj-error" className="mt-2 text-sm font-medium text-red-700 dark:text-red-400">{error.mesaj}</p>}
                         </div>
 
                         <button type="submit" className="w-full py-4 bg-mustard hover:bg-mustard-hover text-forest font-bold rounded-xl transition hover:-translate-y-0.5">
