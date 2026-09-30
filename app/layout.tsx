@@ -15,10 +15,24 @@ const playfair = Playfair_Display({
   style: "italic",
 });
 
+const title = "DeratPro | Deratizare, dezinsecție, dezinfecție";
+const description =
+  "Servicii complete de deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale. Intervenții rapide, sigure și garantate.";
+
 export const metadata: Metadata = {
-  title: "DeratPro | Deratizare, dezinsecție, dezinfecție",
-  description:
-    "Servicii complete de deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale. Intervenții rapide, sigure și garantate.",
+  // adresa site-ului: din ea se face link-ul complet spre imaginea de previzualizare (app/opengraph-image.jpg)
+  metadataBase: new URL("https://deratpro-five.vercel.app"),
+  title,
+  description,
+  // previzualizarea cand link-ul e trimis pe WhatsApp, LinkedIn, Facebook etc.;
+  // imaginea o adauga Next.js singur, din fisierul app/opengraph-image.jpg
+  openGraph: {
+    title,
+    description,
+    siteName: "DeratPro",
+    locale: "ro_RO",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

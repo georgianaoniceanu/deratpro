@@ -87,18 +87,18 @@ navbarul nu merge pe tableta si telefon: pe tableta linkurile se rup pe 2 randur
 **4. Din design în site funcțional.** Codul exportat din Stitch a fost doar referință, nu l-am copiat. Am luat din el paleta, fonturile, ierarhia și spațierile, apoi am construit pagina de la zero:
 - câte o componentă pentru fiecare secțiune, cu textele separate în `data/date.ts`;
 - layout responsive, verificat pe telefon, tabletă și desktop, plus meniu hamburger sub 1024px;
-- formular cu validare reală și mesaj de confirmare;
+- formular cu validare reală: fiecare câmp completat e verificat când ieși din el, la trimitere cursorul sare la primul câmp greșit, iar la final apare un mesaj de confirmare;
 - accesibilitate (contrast, etichete, `aria-*`, navigare din tastatură) și SEO (metadate, `lang="ro"`).
 
 Am schimbat și adăugat față de design:
 - fotografia din hero și animația Three.js;
-- tema dark;
-- butonul de ofertă mutat într-unul plutitor, care apare doar când hero-ul și formularul nu sunt pe ecran;
+- tema dark, pe care o urmează toată pagina, inclusiv navbar-ul, footer-ul și, pe telefon, hero-ul;
+- butonul de ofertă mutat într-unul plutitor, care apare doar când hero-ul, formularul și partea de jos a footer-ului nu sunt pe ecran;
 - pe fiecare card de serviciu, ce tratăm și unde intervenim;
 - zona deservită și cifrele care „numără” când apar pe ecran;
 - apariția lină a secțiunilor la scroll.
 
-Paleta finală: verde închis `#0F2318`, crem `#F2ECDF` și muștar `#E5A93C`. Fonturile sunt **Plus Jakarta Sans** pentru text și **Playfair Display** italic pentru cuvintele accentuate.
+Paleta finală: verde închis `#0F2318`, crem `#F2ECDF` și muștar `#E5A93C`. Fonturile sunt **Plus Jakarta Sans** pentru text și **Playfair Display** italic pentru cuvintele accentuate. Semnătura din footer folosește **Great Vibes**, un font de mână.
 
 ## Structura
 
@@ -108,6 +108,7 @@ app/
   page.tsx          pagina: pune sectiunile una sub alta
   globals.css       culorile si fonturile (@theme), tema dark, animatiile la scroll
   icon.svg          favicon (logo-ul)
+  opengraph-image.jpg  imaginea de previzualizare cand link-ul e trimis pe WhatsApp, LinkedIn etc.
 components/
   Navbar.tsx        meniu, cu hamburger pe telefon si tableta
   Hero.tsx          sectiunea hero
@@ -133,8 +134,8 @@ Fiecare secțiune are componenta ei, iar textele stau separat, în `data/date.ts
 
 Ideea: firma curăță, deci poza din hero **se curăță** sub ochii vizitatorului.
 
-- **Pe calculator:** poza apare murdară, cu praf, pete și o tentă cenușie. Se curăță pe unde treci cu mouse-ul, cu scântei mici pe urma cursorului. Ce ștergi rămâne curat până la refresh.
-- **Pe telefon și tabletă:** hero-ul pornește verde închis. Din colțul din stânga-sus intră lancea unui **nebulizator** (construit din forme simple în Three.js, fără model descărcat). Lancea pulverizează ceață pe diagonală, iar unde se așază ceața apare poza. Animația rulează o singură dată, cam 6–7 secunde.
+- **Pe calculator:** poza apare murdară, cu praf, pete și o tentă cenușie. La încărcare, o ștergere automată de o secundă arată efectul. Apoi poza se curăță pe unde treci cu mouse-ul, cu scântei mici pe urma cursorului, iar o etichetă mică („Treci cu mouse-ul peste imagine”) îl ajută pe vizitator să descopere efectul. Ce ștergi rămâne curat până la refresh.
+- **Pe telefon și tabletă** (ecran tactil sau sub 1024 px): hero-ul pornește plin, crem în light mode sau verde închis în dark mode. Din colțul din stânga-sus intră lancea unui **nebulizator** (construit din forme simple în Three.js, fără model descărcat). Lancea pulverizează ceață pe diagonală, iar unde se așază ceața apare poza. În light mode, peste poză rămâne un strat crem, iar textul e închis la culoare. Animația rulează o singură dată, cam 6–7 secunde.
 
 ### Cum am ajuns aici
 
@@ -150,7 +151,7 @@ Ideea: firma curăță, deci poza din hero **se curăță** sub ochii vizitatoru
 
 - Murdăria e calculată **o singură dată** într-o textură. Să calculez petele pentru fiecare pixel la fiecare cadru era prea greu pentru telefoane.
 - Zona curățată e o **mască** desenată direct pe placa video, cu „ștampile” moi de burete sau de ceață.
-- Shader-ul de la fiecare cadru doar amestecă poza murdară cu cea curată, după mască. Tot el desenează stratul verde care păstrează textul lizibil.
+- Shader-ul de la fiecare cadru doar amestecă poza murdară cu cea curată, după mască. Tot el desenează stratul de culoare (verde sau crem) care păstrează textul lizibil.
 - Canvas-ul desenează **doar când se mișcă ceva** (`frameloop="demand"`) și se oprește complet când hero-ul iese din ecran.
 - Three.js se încarcă separat, **după** ce pagina e afișată. Pe telefon randez la rezoluție mai mică și la ~30 de cadre pe secundă.
 - Dacă ai setat „reducerea animațiilor” în sistem, poza se vede direct, fără efect.
@@ -176,9 +177,10 @@ Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Can
 - **Animații diferite pe calculator și pe telefon.** Pe calculator, ștersul cu mouse-ul e interactiv și merge fluid. Pe telefon, ștersul cu degetul se confunda cu scroll-ul și se bloca pe telefoanele slabe, așa că acolo animația e automată (nebulizatorul) și rulează o singură dată. Compromisul: pe telefon vizitatorul doar privește, nu interacționează.
 - **Forme 3D simple în loc de modele descărcate.** Lancea nebulizatorului e construită din câțiva cilindri și un con în Three.js. Un model de pe Sketchfab ar fi avut câțiva MB, ar fi încetinit încărcarea pe telefon și ar fi cerut atribuirea autorului.
 - **Performance mai mic pe mobil, în schimbul animației.** Detalii în secțiunea [Performanță (Lighthouse)](#performanță-lighthouse).
-- **Formularul nu trimite nimic.** Validează numele, telefonul (format românesc: `07xxxxxxxx` sau `+407xxxxxxxx`) și mesajul, apoi afișează confirmarea. Pentru un site real ar trebui un backend sau un serviciu de email (de exemplu Resend sau Formspree), plus protecție anti-spam.
+- **Formularul nu trimite nimic.** Validează numele (minim 3 caractere), telefonul (format românesc: `07xxxxxxxx` sau `+407xxxxxxxx`) și mesajul, apoi afișează confirmarea. Un câmp completat greșit e semnalat imediat ce ieși din el, iar unul lăsat gol abia la trimitere, ca formularul să nu „certe” pe cineva care doar a trecut prin câmp. Pentru un site real ar trebui un backend sau un serviciu de email (de exemplu Resend sau Formspree), plus protecție anti-spam.
 - **Next.js în loc de Vite.** Am pornit cu Vite, apoi am trecut pe Next.js pentru HTML generat la build, optimizarea automată a imaginilor și a fonturilor și favicon-ul generat din SVG.
-- **Tema dark.** Respectă setarea sistemului, iar alegerea se salvează în browser. Tema se aplică înainte să apară pagina, ca să nu „clipească” din alb în negru.
+- **Tema dark.** Respectă setarea sistemului, iar alegerea se salvează în browser. Tema se aplică înainte să apară pagina, ca să nu „clipească” din alb în negru, iar la schimbare totul trece deodată (tranzițiile sunt oprite pe durata schimbării).
+- **Hero diferit pe calculator și pe telefon, în light mode.** Pe telefon, hero-ul e crem, ca restul paginii. Pe calculator am păstrat hero-ul închis la culoare, pentru că efectul de ștergere pornește de la o poză murdară, iar textul alb peste stratul verde îl face să iasă în evidență.
 - **Accesibilitate.** Contrast verificat, erorile din formular sunt anunțate cititoarelor de ecran (`aria-live`, `aria-invalid`), meniul mobil se închide cu Escape, iar animațiile respectă „reduce motion”.
 - **Firma e fictivă.** Telefonul, emailul și cifrele sunt exemple, iar link-urile spre rețelele sociale duc la paginile principale ale Instagram, Facebook și TikTok.
 
@@ -187,5 +189,5 @@ Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Can
 - Inspirație design: [PureClean](https://dribbble.com/shots/27012712-Professional-Cleaning-Service-Landing-Page), de Adrian Gancarek
 - Fotografia din hero: [Pexels – „A person in white coverall cleaning the black table”](https://www.pexels.com/photo/a-person-in-white-coverall-cleaning-the-black-table-4098322/), cu licența Pexels (gratuită, fără atribuire obligatorie). Am decupat-o pe orizontală și am comprimat-o pentru web.
 - Iconițe: [Lucide](https://lucide.dev)
-- Fonturi: Plus Jakarta Sans și Playfair Display (Google Fonts, prin `next/font`)
+- Fonturi: Plus Jakarta Sans, Playfair Display și Great Vibes (Google Fonts, prin `next/font`)
 - Logo-ul și favicon-ul: desenate în SVG pentru proiect
