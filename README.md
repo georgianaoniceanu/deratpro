@@ -95,7 +95,7 @@ Am schimbat și adăugat față de design:
 - tema dark;
 - butonul de ofertă mutat într-unul plutitor, care apare doar când hero-ul și formularul nu sunt pe ecran;
 - pe fiecare card de serviciu, ce tratăm și unde intervenim;
-- certificările, zona deservită și cifrele care „numără” când apar pe ecran;
+- zona deservită și cifrele care „numără” când apar pe ecran;
 - apariția lină a secțiunilor la scroll.
 
 Paleta finală: verde închis `#0F2318`, crem `#F2ECDF` și muștar `#E5A93C`. Fonturile sunt **Plus Jakarta Sans** pentru text și **Playfair Display** italic pentru cuvintele accentuate.
@@ -115,11 +115,11 @@ components/
   HeroCleanScene.tsx  animatia three.js (shadere, masca, nebulizatorul)
   HeroHint.tsx      indiciul "trece cu mouse-ul" (doar pe calculator)
   Services.tsx      cele 3 servicii
-  WhyUs.tsx         avantaje, cifre si certificari
+  WhyUs.tsx         avantaje si cifre
   Stats.tsx, CountUp.tsx   cifrele care "numara" cand apar pe ecran
   HowItWorks.tsx    cei 3 pasi
   Contact.tsx       formularul, cu validare si confirmare
-  Footer.tsx
+  Footer.tsx        navigare, contact si retele sociale
   FloatingOffer.tsx butonul plutitor "Ofertă"
   ThemeToggle.tsx   comutatorul light/dark
   RevealOnScroll.tsx  aparitia elementelor la scroll
@@ -180,7 +180,7 @@ Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Can
 - **Next.js în loc de Vite.** Am pornit cu Vite, apoi am trecut pe Next.js pentru HTML generat la build, optimizarea automată a imaginilor și a fonturilor și favicon-ul generat din SVG.
 - **Tema dark.** Respectă setarea sistemului, iar alegerea se salvează în browser. Tema se aplică înainte să apară pagina, ca să nu „clipească” din alb în negru.
 - **Accesibilitate.** Contrast verificat, erorile din formular sunt anunțate cititoarelor de ecran (`aria-live`, `aria-invalid`), meniul mobil se închide cu Escape, iar animațiile respectă „reduce motion”.
-- **Firma e fictivă.** Telefonul, emailul, cifrele și certificările sunt exemple, iar link-urile spre rețelele sociale duc nicăieri (`#`).
+- **Firma e fictivă.** Telefonul, emailul și cifrele sunt exemple, iar link-urile spre rețelele sociale duc la paginile principale ale Instagram, Facebook și TikTok.
 
 ## Resurse
 

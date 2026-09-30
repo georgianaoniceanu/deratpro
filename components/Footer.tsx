@@ -1,12 +1,14 @@
 import Image from "next/image"
+import { Great_Vibes } from "next/font/google"
 import { Phone, Mail } from "lucide-react"
 import { navLinks, contactInfo } from "@/data/date"
 
-// iconite de brand desenate ca SVG (lucide nu mai include logo-uri de branduri)
+// iconite de brand desenate ca SVG (lucide nu mai include logo-uri de branduri).
+// firma e fictiva, deci linkurile duc la paginile principale ale retelelor
 const socials = [
     {
         label: "Instagram",
-        href: "#",
+        href: "https://www.instagram.com/",
         icon: (
             <>
                 <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -17,31 +19,37 @@ const socials = [
     },
     {
         label: "Facebook",
-        href: "#",
+        href: "https://www.facebook.com/",
         icon: <path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" />,
     },
     {
         label: "TikTok",
-        href: "#",
+        href: "https://www.tiktok.com/",
         icon: <path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917z" />,
     },
 ]
 
-const titleClass = "text-lg font-extrabold text-mustard mb-5"
+// font de mana, doar pentru semnatura de la final (se incarca prin next/font, ca si celelalte fonturi)
+const signature = Great_Vibes({ subsets: ["latin"], weight: "400", display: "swap" })
+
+// pe fundal deschis, mustarul e prea slab ca contrast; folosim auriul mai inchis (ca in restul site-ului)
+const accent = "text-[#9A6410] dark:text-mustard"
+const titleClass = `text-lg font-extrabold ${accent} mb-5`
 
 export default function Footer() {
+    // culorile vin din tema: crem in light mode, verde foarte inchis in dark mode
     return (
-        <footer className="bg-forest text-white">
+        <footer className="bg-sand text-typography border-t border-sand-dark">
             <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-x-20 sm:gap-y-16 lg:gap-12">
                     <div>
-                        <a href="#" className="inline-flex items-center gap-3 text-3xl font-extrabold tracking-tight">
+                        <a href="#" className="inline-flex items-center gap-3 text-3xl font-extrabold tracking-tight text-forest dark:text-white">
                             <Image src="/logo.svg" alt="" width={44} height={44} className="w-11 h-11" />
                             <span>
-                                Derat<span className="text-mustard">Pro</span>
+                                Derat<span className={accent}>Pro</span>
                             </span>
                         </a>
-                        <p className="mt-4 text-base text-gray-300 leading-relaxed max-w-xs">
+                        <p className="mt-4 text-base text-typography-muted leading-relaxed max-w-xs">
                             Deratizare, dezinsecție și dezinfecție pentru locuințe și spații comerciale din {contactInfo.area}.
                         </p>
                     </div>
@@ -51,7 +59,7 @@ export default function Footer() {
                         <ul className="flex flex-col gap-3">
                             {navLinks.map(l => (
                                 <li key={l.href}>
-                                    <a href={l.href} className="text-base text-gray-300 hover:text-white transition-colors">
+                                    <a href={l.href} className="text-base text-typography-muted hover:text-forest dark:hover:text-white transition-colors">
                                         {l.label}
                                     </a>
                                 </li>
@@ -63,16 +71,16 @@ export default function Footer() {
                         <h2 className={titleClass}>Contact</h2>
                         <ul className="flex flex-col gap-4">
                             <li>
-                                <a href={contactInfo.phoneHref} className="flex items-center gap-3 text-base font-semibold hover:text-mustard transition-colors">
-                                    <span className="w-10 h-10 shrink-0 rounded-xl bg-forest-surface border border-white/15 flex items-center justify-center text-mustard">
+                                <a href={contactInfo.phoneHref} className="flex items-center gap-3 text-base font-semibold hover:text-[#9A6410] dark:hover:text-mustard transition-colors">
+                                    <span className="w-10 h-10 shrink-0 rounded-xl bg-white dark:bg-forest-surface border border-sand-dark dark:border-white/15 flex items-center justify-center text-[#9A6410] dark:text-mustard">
                                         <Phone size={18} aria-hidden="true" />
                                     </span>
                                     {contactInfo.phoneDisplay}
                                 </a>
                             </li>
                             <li>
-                                <a href={`mailto:${contactInfo.email}`} className="flex items-center gap-3 text-base font-semibold hover:text-mustard transition-colors">
-                                    <span className="w-10 h-10 shrink-0 rounded-xl bg-forest-surface border border-white/15 flex items-center justify-center text-mustard">
+                                <a href={`mailto:${contactInfo.email}`} className="flex items-center gap-3 text-base font-semibold hover:text-[#9A6410] dark:hover:text-mustard transition-colors">
+                                    <span className="w-10 h-10 shrink-0 rounded-xl bg-white dark:bg-forest-surface border border-sand-dark dark:border-white/15 flex items-center justify-center text-[#9A6410] dark:text-mustard">
                                         <Mail size={18} aria-hidden="true" />
                                     </span>
                                     {contactInfo.email}
@@ -88,8 +96,10 @@ export default function Footer() {
                                 <li key={s.label}>
                                     <a
                                         href={s.href}
-                                        aria-label={s.label}
-                                        className="w-12 h-12 rounded-xl bg-forest-surface border border-white/15 flex items-center justify-center text-white hover:text-mustard hover:border-mustard/50 transition-colors"
+                                        target="_blank" // se deschide in alt tab, ca vizitatorul sa nu piarda site-ul
+                                        rel="noopener noreferrer"
+                                        aria-label={`${s.label} (se deschide într-un tab nou)`}
+                                        className="w-12 h-12 rounded-xl bg-white dark:bg-forest-surface border border-sand-dark dark:border-white/15 flex items-center justify-center text-forest dark:text-white hover:text-[#9A6410] dark:hover:text-mustard hover:border-mustard/60 transition-colors"
                                     >
                                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                             {s.icon}
@@ -101,9 +111,11 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <p className="mt-12 pt-6 border-t border-white/10 text-sm text-gray-400 text-center">
+                <p className="mt-12 pt-6 border-t border-sand-dark text-sm text-typography-muted text-center">
                     © 2026 DeratPro. Toate drepturile rezervate.
                 </p>
+                {/* semnatura autoarei, scrisa de mana, usor inclinata */}
+                <p className={`${signature.className} mt-3 text-2xl ${accent} text-center -rotate-2`}>Made by Georgiana</p>
             </div>
         </footer>
     )

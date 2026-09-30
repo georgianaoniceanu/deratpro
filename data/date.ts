@@ -108,11 +108,3 @@ export const contactInfo: ContactInfo = {
   schedule: 'Luni–Vineri 07:00–22:00, Sâmbătă–Duminică 08:00–20:00',
   area: 'București și Ilfov',
 }
-
-// autorizatiile firmei, afisate sub statistici (client fictiv)
-export const certifications: string[] = [
-  'Autorizat DSP',
-  'Biocide avizate CNPB',
-  'Personal cu atestat DDD',
-  'Certificat ISO 9001',
-]

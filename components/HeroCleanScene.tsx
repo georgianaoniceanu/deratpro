@@ -36,11 +36,12 @@ const fogVertexShader = `
   }
 `
 const fogFragmentShader = `
+  uniform vec3 uFogColor; // alb-verzui pe fundal verde, verde-gri pe fundal crem (ca sa se vada)
   varying float vAlpha;
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float a = smoothstep(0.5, 0.0, d);
-    gl_FragColor = vec4(0.88, 0.96, 0.92, a * a * vAlpha);
+    gl_FragColor = vec4(uFogColor, a * a * vAlpha);
   }
 `
 
@@ -168,12 +169,14 @@ const fragmentShader = `
   uniform sampler2D uMask;
   uniform float uWide; // 1 = desktop (strat verde de la stanga la dreapta), 0 = telefon/tableta (de sus in jos)
   uniform vec3 uForest; // verdele inchis al site-ului
-  uniform float uCover; // 1 = telefon: in loc de poza murdara, un strat verde plin pe care il dizolva ceata
+  uniform float uCover; // 1 = telefon: in loc de poza murdara, un strat plin pe care il dizolva ceata
+  uniform vec3 uCoverColor; // culoarea stratului plin: verde in dark mode, crem in light mode
+  uniform float uLight; // 1 = hero deschis (telefon, light mode): peste poza un strat crem, pentru text inchis
   ${shaderCommon}
 
   void main() {
     vec3 clean = samplePhoto() * 1.08; // culorile reale, putin mai luminoase
-    vec3 dirty = mix(texture2D(uDirty, vUv).rgb, uForest, uCover);
+    vec3 dirty = mix(texture2D(uDirty, vUv).rgb, uCoverColor, uCover);
 
     float raw = texture2D(uMask, vUv).r;
     // pe telefon, marginea zonei descoperite e neregulata, ca un nor de ceata (zgomotul conteaza doar pe margine,
@@ -192,7 +195,8 @@ const fragmentShader = `
     float tall = mix(0.55, 0.9, smoothstep(0.0, 1.0, vUv.y));
     float overlay = mix(tall, wide, uWide);
     overlay *= 1.0 - m * 0.3; // dupa curatare stratul se deschide doar putin, ca textul sa ramana lizibil
-    color = mix(color, uForest, overlay);
+    // pe hero-ul deschis, stratul e crem si acopera doar zona descoperita (restul e deja crem)
+    color = mix(color, mix(uForest, uCoverColor, uLight), overlay * mix(1.0, m, uLight));
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -338,6 +342,8 @@ function CleanPlane() {
         // #0F2318 ca valori brute 0..1 (canvas-ul lucreaza fara conversii de culoare)
         uForest: { value: new THREE.Vector3(15 / 255, 35 / 255, 24 / 255) },
         uCover: { value: cover ? 1 : 0 },
+        uCoverColor: { value: new THREE.Vector3(15 / 255, 35 / 255, 24 / 255) },
+        uLight: { value: 0 },
     }))
 
     const materialRef = useRef<THREE.ShaderMaterial>(null)
@@ -358,7 +364,35 @@ function CleanPlane() {
     const tool = useRef<THREE.Group>(null) // lancea nebulizatorului
     const fogPoints = useRef<THREE.Points>(null)
     const fog = useRef<FogData | null>(null)
-    const [fogUniforms] = useState(() => ({ uPixelRatio: { value: 1 } }))
+    const [fogUniforms] = useState(() => ({ uPixelRatio: { value: 1 }, uFogColor: { value: new THREE.Vector3(0.88, 0.96, 0.92) } }))
+
+    // pe telefon, hero-ul urmeaza tema: in light mode stratul initial e crem (ca fundalul hero-ului din CSS),
+    // iar ceata verde-gri, ca sa se vada pe el. urmarim clasa "dark" de pe <html>, ca butonul de tema sa schimbe
+    // culorile pe loc, fara refresh
+    useEffect(() => {
+        if (!cover) return
+        const apply = () => {
+            const light = !document.documentElement.classList.contains("dark")
+            const material = materialRef.current
+            if (material) {
+                const u = material.uniforms
+                // #F2ECDF (sand, crem cald, nu alb pur, ca sa nu obosesca ochii) sau #0F2318 (forest), ca valori brute 0..1
+                if (light) u.uCoverColor.value.set(242 / 255, 236 / 255, 223 / 255)
+                else u.uCoverColor.value.set(15 / 255, 35 / 255, 24 / 255)
+                u.uLight.value = light ? 1 : 0
+            }
+            const fogMaterial = fogPoints.current?.material as THREE.ShaderMaterial | undefined
+            if (fogMaterial) {
+                if (light) fogMaterial.uniforms.uFogColor.value.set(0.42, 0.58, 0.49)
+                else fogMaterial.uniforms.uFogColor.value.set(0.88, 0.96, 0.92)
+            }
+            invalidate()
+        }
+        apply()
+        const observer = new MutationObserver(apply)
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
+        return () => observer.disconnect()
+    }, [cover, invalidate])
 
     // particulele de ceata (doar pe telefon): geometria o cream o singura data, apoi doar ii schimbam valorile
     useEffect(() => {

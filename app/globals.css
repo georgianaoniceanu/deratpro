@@ -3,6 +3,16 @@
 /* dark mode activat de clasa "dark" pe <html> (pusa de butonul din navbar) */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* hero-ul deschis la culoare: pe telefon si tableta (ecran tactil sau sub 1024px), in light mode, cand ruleaza
+   animatia cu ceata. aceleasi conditii ca in HeroCleanScene.tsx, unde se alege efectul */
+@custom-variant hero-light {
+  @media (prefers-reduced-motion: no-preference) and ((pointer: coarse) or (width < 64rem)) {
+    &:where(html:not(.dark) *) {
+      @slot;
+    }
+  }
+}
+
 /* culorile sunt variabile CSS, ca modul intunecat sa le poata inlocui mai jos */
 @theme {
   --color-forest: #0F2318;
@@ -71,7 +81,14 @@
 
   body {
     /* se vede doar daca pagina e trasa dincolo de margini (overscroll) */
-    @apply bg-[#E1D9C8] dark:bg-forest-deep text-typography font-sans antialiased transition-colors;
+    @apply bg-[#E1D9C8] dark:bg-forest-deep text-typography font-sans antialiased;
+  }
+
+  /* cat timp se schimba tema, oprim toate tranzitiile (butoane, linkuri etc.), ca totul sa treaca deodata,
+     nu unele elemente mai tarziu decat altele (vezi ThemeToggle.tsx) */
+  .theme-switching,
+  .theme-switching * {
+    transition: none !important;
   }
 }
 
