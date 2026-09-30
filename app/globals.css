@@ -49,17 +49,28 @@
 }
 
 @layer base {
+  /* inaltimea navbar-ului, definita intr-un singur loc: o folosesc navbar-ul, hero-ul (ca sa umple exact
+     primul ecran) si saltul la sectiuni. pixeli intregi, ca sa nu ramana linii subtiri din rotunjiri */
+  :root {
+    --nav-h: 88px;
+  }
+  @media (width >= 40rem) {
+    :root {
+      --nav-h: 96px;
+    }
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   /* navbar-ul e fix sus: la click pe un link, sectiunea se opreste sub el, nu ascunsa de el */
   section[id] {
-    scroll-margin-top: 96px;
+    scroll-margin-top: var(--nav-h);
   }
 
   body {
-    /* fundalul din jurul site-ului e mai inchis decat secțiunile, ca in dark mode, ca sa iasa cardul in evidenta */
+    /* se vede doar daca pagina e trasa dincolo de margini (overscroll) */
     @apply bg-[#E1D9C8] dark:bg-forest-deep text-typography font-sans antialiased transition-colors;
   }
 }

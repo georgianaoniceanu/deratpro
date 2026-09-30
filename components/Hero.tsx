@@ -4,8 +4,10 @@ import HeroClean from "./HeroClean"
 import HeroHint from "./HeroHint"
 
 export default function Hero() {
+    // hero-ul umple primul ecran, sub navbar. +1px: cand ecranul e scalat (zoom in browser, DevTools, densitati
+    // de pixeli fractionare), marginea se poate rotunji in jos si ramane vizibil un rand din sectiunea urmatoare
     return (
-        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-88px)] sm:min-h-[calc(100svh-96px)] flex items-center py-16 sm:py-20">
+        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-var(--nav-h)+1px)] flex items-center py-16 sm:py-20">
             {/* fotografia de fundal; decorativa, deci alt gol */}
             <Image
                 src="/hero-bg.jpg"

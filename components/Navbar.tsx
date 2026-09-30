@@ -33,9 +33,8 @@ export default function Navbar() {
         // ramane lipit sus cand derulezi pagina, ca meniul si butonul de oferta sa fie mereu la indemana.
         // fara backdrop-blur: ar strica meniul mobil (care e "fixed" pe tot ecranul)
         <header className="sticky top-0 z-40 bg-forest text-white shadow-lg shadow-black/10">
-            {/* inaltime fixa (88px, 96px de la sm), in pixeli intregi: hero-ul scade exact aceeasi valoare ca sa umple
-                primul ecran. cu inaltimea data de padding iesea fractionara si ramanea o linie din sectiunea urmatoare */}
-            <div className="max-w-7xl mx-auto px-6 lg:px-12 h-22 sm:h-24 flex items-center justify-between border-b border-white/10">
+            {/* inaltimea vine din variabila --nav-h (globals.css), aceeasi pe care o scade hero-ul */}
+            <div className="max-w-7xl mx-auto px-6 lg:px-12 h-(--nav-h) flex items-center justify-between border-b border-white/10">
                 <a href="#" className="flex items-center gap-3.5">
                     {/* alt gol: logo-ul e decorativ, numele e scris imediat langa el */}
                     <Image src="/logo.svg" alt="" width={48} height={48} priority className="w-12 h-12" />
