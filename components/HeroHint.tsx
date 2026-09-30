@@ -41,21 +41,13 @@ export default function HeroHint() {
             }
         }
 
-        const onPointer = (e: PointerEvent) => {
-            if (e.pointerType !== "touch") track(e.clientX, e.clientY)
-        }
-        const onTouch = (e: TouchEvent) => {
-            const t = e.touches[0]
-            if (t) track(t.clientX, t.clientY)
-        }
+        const onPointer = (e: PointerEvent) => track(e.clientX, e.clientY)
         function cleanup() {
             window.removeEventListener("pointermove", onPointer)
-            window.removeEventListener("touchmove", onTouch)
         }
 
         function startTracking() {
             window.addEventListener("pointermove", onPointer)
-            window.addEventListener("touchmove", onTouch, { passive: true })
         }
         if (document.documentElement.dataset.heroWipe === "ready") startTracking()
         else window.addEventListener(WIPE_READY_EVENT, startTracking, { once: true })
