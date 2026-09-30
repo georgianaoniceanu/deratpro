@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber"
 import * as THREE from "three"
+import { announceWipeReady } from "./HeroHint"
 
 // dimensiunile fotografiei din public/hero-bg.jpg (pentru incadrarea de tip "cover")
 const PHOTO_ASPECT = 2400 / 2053
@@ -319,8 +320,12 @@ function CleanPlane() {
     const photo = useLoader(THREE.TextureLoader, "/hero-bg.jpg")
     const reduceMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, [])
     const coarse = useMemo(() => window.matchMedia("(pointer: coarse)").matches, [])
-    // telefon (fara "reduce motion"): hero-ul porneste verde si ceata nebulizatorului descopera poza, o singura data
-    const cover = coarse && !reduceMotion
+    // telefoane si tablete (fara "reduce motion"): hero-ul porneste verde si ceata nebulizatorului descopera poza,
+    // o singura data. le recunoastem dupa ecranul tactil (pointer: coarse), dar si dupa latime (sub 1024px, acelasi
+    // prag ca "lg:" din Tailwind), ca efectul sa fie acelasi la orice tableta, chiar daca browserul raporteaza
+    // altfel tipul de ecran. ferestrele inguste de pe calculator primesc si ele ceata, ceea ce e in regula
+    const narrow = useMemo(() => window.innerWidth < 1024, [])
+    const cover = (coarse || narrow) && !reduceMotion
 
     // valorile initiale trimise shader-ului; le modificam apoi prin materialRef
     const [uniforms] = useState(() => ({
@@ -342,6 +347,13 @@ function CleanPlane() {
     const last = useRef<{ x: number; y: number } | null>(null)
     const start = useRef<number | null>(null)
     const sweeping = useRef(false) // daca in cadrul anterior rula o stergere automata
+    // pe calculator, mouse-ul sterge abia dupa stergerea automata de la inceput: daca le lasam pe amandoua
+    // deodata, traseele se legau intre ele in linii lungi, cu multe stampile intr-un singur cadru, si aparea un lag
+    const mouseReady = useRef(reduceMotion)
+    // fara stergere automata (reduce motion), mouse-ul sterge din prima
+    useEffect(() => {
+        if (reduceMotion && !coarse) announceWipeReady()
+    }, [reduceMotion, coarse])
     const revealDone = useRef(false) // pe telefon: ceata a terminat, poza ramane curata
     const tool = useRef<THREE.Group>(null) // lancea nebulizatorului
     const fogPoints = useRef<THREE.Points>(null)
@@ -582,6 +594,7 @@ function CleanPlane() {
                 last.current = null
                 return
             }
+            if (!mouseReady.current) return // inca ruleaza stergerea automata
             pending.current.push({ x, y })
             invalidate() // desenam doar cand chiar se intampla ceva
         }
@@ -731,15 +744,20 @@ function CleanPlane() {
                 renderer.setClearColor(previousClear, previousAlpha)
                 renderer.setRenderTarget(null)
             }
-        } else if (!reduceMotion && !coarse) {
+        } else if (!reduceMotion && !cover) {
             // calculator: o singura stergere la incarcare, pe partea dreapta, ca vizitatorul sa vada efectul
-            const progress = elapsed / 1.8
+            const progress = elapsed / 1 // dureaza o secunda
             if (progress <= 1) {
                 introRunning = true
                 if (!sweeping.current) last.current = null // nu legam stergerea de o pozitie veche a mouse-ului
                 const x = size.width * (0.5 + 0.45 * progress)
                 const y = size.height * (0.72 - 0.45 * progress + Math.sin(progress * Math.PI * 3) * 0.08)
                 pending.current.push({ x, y })
+            } else if (!mouseReady.current) {
+                // stergerea automata s-a terminat: de acum sterge mouse-ul, fara sa continue traseul automat
+                mouseReady.current = true
+                last.current = null
+                announceWipeReady()
             }
         }
         sweeping.current = introRunning

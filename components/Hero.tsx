@@ -5,7 +5,7 @@ import HeroHint from "./HeroHint"
 
 export default function Hero() {
     return (
-        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-101px)] sm:min-h-[calc(100svh-121px)] lg:min-h-[calc(100svh-137px)] xl:min-h-[calc(100svh-145px)] flex items-center py-16 sm:py-20">
+        <section id="hero" className="relative overflow-hidden bg-forest text-white min-h-[calc(100svh-88px)] sm:min-h-[calc(100svh-96px)] flex items-center py-16 sm:py-20">
             {/* fotografia de fundal; decorativa, deci alt gol */}
             <Image
                 src="/hero-bg.jpg"
@@ -13,8 +13,9 @@ export default function Hero() {
                 fill
                 priority
                 sizes="100vw"
-                // pe telefon poza nu se vede de la inceput: hero-ul e verde si ceata din animatie o descopera
-                className="object-cover object-[right_35%] [@media(pointer:coarse)]:motion-safe:opacity-0"
+                // pe telefon si tableta (ecran tactil sau sub 1024px) poza nu se vede de la inceput:
+                // hero-ul e verde si ceata din animatie o descopera
+                className="object-cover object-[right_35%] [@media(pointer:coarse)]:motion-safe:opacity-0 max-lg:motion-safe:opacity-0"
             />
             {/* strat verde peste poza, ca textul alb sa se citeasca (pe telefon mai inchis sus, pe desktop in stanga).
                 se vede doar pana porneste animatia; apoi shader-ul deseneaza singur acelasi strat, peste el */}
@@ -45,9 +46,9 @@ export default function Hero() {
                         Urgențe: {contactInfo.phoneDisplay}
                     </a>
                 </div>
-
-                <HeroHint />
             </div>
+            {/* indiciul sta jos, in stanga hero-ului, aliniat cu textul */}
+            <HeroHint />
         </section>
     )
 }
