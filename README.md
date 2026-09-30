@@ -21,6 +21,7 @@ Alte comenzi:
 npm run build   # build de productie
 npm start       # ruleaza build-ul de productie
 npm run lint    # verificare ESLint
+npm test        # testele automate (Vitest)
 ```
 
 ## Stack
@@ -34,7 +35,7 @@ npm run lint    # verificare ESLint
 | **lucide-react** | Iconițe line-art, în același stil cu designul. |
 | **Vercel** | Hosting gratuit, cu deploy automat la fiecare push pe GitHub. |
 
-Formularul de contact are validare scrisă de mână, cu `useState`. Pentru trei câmpuri nu merita o librărie.
+Formularul de contact are validare scrisă de mână, cu `useState`. Pentru trei câmpuri nu merita o librărie. Regulile de validare stau într-o funcție separată (`lib/validate.ts`), testată automat cu **[Vitest](https://vitest.dev)**.
 
 ## Design: de la Dribbble la Google Stitch
 
@@ -126,6 +127,9 @@ components/
   RevealOnScroll.tsx  aparitia elementelor la scroll
 data/
   date.ts           toate textele (servicii, avantaje, pasi, contact), cu tipuri
+lib/
+  validate.ts       regulile de validare ale formularului (nume, telefon, mesaj)
+  validate.test.ts  testele pentru ele
 ```
 
 Fiecare secțiune are componenta ei, iar textele stau separat, în `data/date.ts`, și sunt afișate cu `.map()`. Ca să schimbi un serviciu sau un pas, modifici doar datele.
@@ -156,16 +160,26 @@ Ideea: firma curăță, deci poza din hero **se curăță** sub ochii vizitatoru
 - Three.js se încarcă separat, **după** ce pagina e afișată. Pe telefon randez la rezoluție mai mică și la ~30 de cadre pe secundă.
 - Dacă ai setat „reducerea animațiilor” în sistem, poza se vede direct, fără efect.
 
+## Teste
+
+Validarea formularului e separată de componentă, în `lib/validate.ts`, ca să poată fi testată singură. `lib/validate.test.ts` are 17 teste care acoperă mai ales cazurile limită:
+- **nume:** 2 caractere e respins, 3 caractere e acceptat, spațiile de la capete nu se numără;
+- **telefon:** formatele românești acceptate (`0720000000`, `0720 000 000`, `0720-000-000`, `+40720000000`) și numerele respinse (prea scurte, prea lungi, fix în loc de mobil, cu litere, cu prefix de altă țară);
+- **mesaj:** un mesaj sub 10 caractere e respins, unul de exact 10 caractere e acceptat;
+- un formular corect nu are nicio eroare, iar unul gol are erori la toate câmpurile.
+
+Le rulezi cu `npm test`.
+
 ## Performanță (Lighthouse)
 
-Măsurat pe site-ul de pe Vercel:
+Măsurat pe site-ul de pe Vercel (30 septembrie 2026, Lighthouse 13):
 
 | | Performance | Accessibility | Best Practices | SEO |
 |---|---|---|---|---|
-| **Desktop** | 97 | 100 | 100 | 100 |
-| **Mobil** | 75 | 100 | 100 | 100 |
+| **Desktop** | 100 | 100 | 100 | 100 |
+| **Mobil** | 76 | 100 | 100 | 100 |
 
-Scorul mai mic pe mobil vine din animația Three.js. Pe un telefon slab simulat, încărcarea librăriei și compilarea shaderelor blochează pagina ~1 s (Total Blocking Time). Pe desktop, aceeași animație blochează doar ~150 ms.
+Scorul mai mic pe mobil vine din animația Three.js. Pe un telefon slab simulat, încărcarea librăriei și compilarea shaderelor blochează pagina ~1 s (Total Blocking Time: 950 ms). Pe desktop, aceeași animație blochează doar ~50 ms.
 
 Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Canvas-ul desenează doar când se mișcă ceva, iar pe telefon randez la rezoluție mai mică și la ~30 de cadre pe secundă.
 
@@ -173,6 +187,7 @@ Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Can
 
 ## Decizii și compromisuri
 
+- **Gândit pentru cine intră pe site.** Cine caută o firmă de deratizare are de obicei o problemă urgentă. De aceea numărul de urgențe e în hero, iar butonul „Ofertă” rămâne la îndemână când derulezi. Formularul are doar trei câmpuri și nu „ceartă” pe nimeni pentru un câmp lăsat gol până la trimitere.
 - **O singură animație, legată de mesaj.** Am renunțat la bulele de săpun, deși arătau bine, ca să rămână un singur efect principal, în hero, care spune povestea „spațiile tale rămân curate”.
 - **Animații diferite pe calculator și pe telefon.** Pe calculator, ștersul cu mouse-ul e interactiv și merge fluid. Pe telefon, ștersul cu degetul se confunda cu scroll-ul și se bloca pe telefoanele slabe, așa că acolo animația e automată (nebulizatorul) și rulează o singură dată. Compromisul: pe telefon vizitatorul doar privește, nu interacționează.
 - **Forme 3D simple în loc de modele descărcate.** Lancea nebulizatorului e construită din câțiva cilindri și un con în Three.js. Un model de pe Sketchfab ar fi avut câțiva MB, ar fi încetinit încărcarea pe telefon și ar fi cerut atribuirea autorului.
@@ -183,6 +198,20 @@ Ca să reduc costul, Three.js se încarcă abia după ce pagina e afișată. Can
 - **Hero diferit pe calculator și pe telefon, în light mode.** Pe telefon, hero-ul e crem, ca restul paginii. Pe calculator am păstrat hero-ul închis la culoare, pentru că efectul de ștergere pornește de la o poză murdară, iar textul alb peste stratul verde îl face să iasă în evidență.
 - **Accesibilitate.** Contrast verificat, erorile din formular sunt anunțate cititoarelor de ecran (`aria-live`, `aria-invalid`), meniul mobil se închide cu Escape, iar animațiile respectă „reduce motion”.
 - **Firma e fictivă.** Telefonul, emailul și cifrele sunt exemple, iar link-urile spre rețelele sociale duc la paginile principale ale Instagram, Facebook și TikTok.
+
+## Cum am folosit tool-urile AI
+
+- **Google Stitch** pentru conceptul vizual. Am pornit de la un design real de pe Dribbble și am refăcut promptul după prima variantă (detalii mai sus).
+- **Un asistent AI de programare** pentru o parte din cod, mai ales pentru animația Three.js și shadere.
+
+Deciziile au rămas ale mele. Am respins mai multe variante propuse sau generate: primul design din Stitch, bulele de săpun, ștergerea automată în zigzag, trafaletul. Am testat pe mai multe dimensiuni de ecran și am cerut corecturi unde ceva nu arăta sau nu mergea bine: lizibilitatea textului din hero, lag-ul pe telefon, linia albă de sub hero, albul prea puternic în light mode, butonul peste footer, mesajele formularului. AI-ul a scris repede cod, iar partea mea a fost să aleg ce rămâne și să verific că funcționează.
+
+## Ce aș face mai departe
+
+- Trimiterea reală a formularului, cu un serviciu de email (de exemplu Resend) și protecție anti-spam.
+- Scorul Performance pe mobil: animația ar putea porni abia când browserul e complet liber, cu un strat static care să nu lase hero-ul gol până atunci.
+- Teste pentru componenta formularului (scriere în câmpuri, ieșire din câmp, trimitere), cu React Testing Library, și un test vizual pe câteva dimensiuni de ecran.
+- Pagini separate pentru fiecare serviciu, pentru SEO.
 
 ## Resurse
 

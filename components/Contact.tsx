@@ -3,11 +3,8 @@ import { Phone, Mail, Clock, MapPin } from "lucide-react"
 import {contactInfo} from "../data/date"
 import { useState } from "react"
 import type { ChangeEvent, CSSProperties, FocusEvent, SubmitEvent } from "react"
-interface Form{
-    nume: string,
-    telefon: string,
-    mesaj: string
-}
+// regulile de validare stau separat, in lib/validate.ts, ca sa poata fi testate automat
+import { validate, type Form } from "../lib/validate"
 // id-ul din pagina al fiecarui camp (pentru label si pentru mutarea cursorului la primul camp gresit)
 const fieldIds: Record<keyof Form, string> = { nume: "nume", telefon: "tel", mesaj: "mesaj" }
 
@@ -15,24 +12,6 @@ export default function Contact(){
     const [form, setForm] = useState<Form>({nume: "", telefon: "", mesaj: ""})
     const [error, setError] = useState<Form>({nume: "", telefon: "", mesaj:""})
     const [sent, setSent] = useState(false)
-    const validate = ({nume, telefon, mesaj}:Form): Form => {
-        const errors: Form = {nume: "", telefon: "", mesaj: ""}
-
-        if(nume.trim().length < 3){
-            errors.nume = "Introdu numele tău (minimum 3 caractere)."
-        }
-
-        const phone = telefon.replace(/[\s-]/g, "")
-        if(!/^(\+40|0)7\d{8}$/.test(phone)){
-            errors.telefon = "Numărul nu pare valid. Exemplu: 0720 000 000."
-        }
-
-        if(mesaj.trim().length < 10){
-            errors.mesaj = "Descrie pe scurt problema (minimum 10 caractere)."
-        }
-
-        return errors
-    }
     const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)=>{
         setSent(false)
         const name = e.target.name as keyof Form
