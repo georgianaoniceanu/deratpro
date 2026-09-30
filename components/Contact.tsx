@@ -83,29 +83,30 @@ export default function Contact(){
                     </p>
 
                     <address className="not-italic space-y-8">
-                        <div className="flex items-start gap-5">
-                            <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
+                        {/* telefonul si emailul: tot randul (iconita + text) e link, ca in footer */}
+                        <a href={contactInfo.phoneHref} className="group flex items-start gap-5 w-fit">
+                            <span className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center transition-transform group-hover:scale-105">
                                 <Phone size={24} aria-hidden="true" />
-                            </div>
-                            <div>
-                                <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Telefon urgențe</p>
-                                <a href={contactInfo.phoneHref} className="text-3xl font-extrabold text-forest dark:text-white hover:text-mustard-hover transition-colors">
+                            </span>
+                            <span>
+                                <span className="block text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Telefon urgențe</span>
+                                <span className="text-3xl font-extrabold text-forest dark:text-white group-hover:text-mustard-hover transition-colors">
                                     {contactInfo.phoneDisplay}
-                                </a>
-                            </div>
-                        </div>
+                                </span>
+                            </span>
+                        </a>
 
-                        <div className="flex items-start gap-5">
-                            <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
+                        <a href={`mailto:${contactInfo.email}`} className="group flex items-start gap-5 w-fit">
+                            <span className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center transition-transform group-hover:scale-105">
                                 <Mail size={24} aria-hidden="true" />
-                            </div>
-                            <div>
-                                <p className="text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Email suport</p>
-                                <a href={`mailto:${contactInfo.email}`} className="text-xl font-semibold text-forest dark:text-white hover:text-mustard-hover transition-colors">
+                            </span>
+                            <span>
+                                <span className="block text-base font-bold uppercase tracking-wider text-typography-muted mb-1">Email suport</span>
+                                <span className="text-xl font-semibold text-forest dark:text-white group-hover:text-mustard-hover transition-colors">
                                     {contactInfo.email}
-                                </a>
-                            </div>
-                        </div>
+                                </span>
+                            </span>
+                        </a>
 
                         <div className="flex items-start gap-5">
                             <div className="w-14 h-14 shrink-0 rounded-2xl bg-forest dark:bg-forest-surface text-mustard flex items-center justify-center">
